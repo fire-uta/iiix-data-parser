@@ -1,8 +1,9 @@
 from relevance import Relevance
 from data_record import DataRecord
+from has_actions import HasActions
 
 
-class Topic(DataRecord):
+class Topic(DataRecord, HasActions):
   def __init__(self, topic_identifier):
     DataRecord.__init__( self, topic_identifier )
     self.relevances = []
