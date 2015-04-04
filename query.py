@@ -1,3 +1,6 @@
+from numpy import uint16
+
+
 from query_result_list import QueryResultList
 from data_record import DataRecord
 from has_actions import HasActions
@@ -5,7 +8,7 @@ from has_actions import HasActions
 
 class Query(DataRecord, HasActions):
   def __init__(self, query_id, topic = None, result_list = None, user = None, condition = None, autocomplete = None, query_text = None):
-    DataRecord.__init__( self, query_id )
+    DataRecord.__init__( self, uint16(query_id) )
     self.topic = topic
     self.result_list = result_list
     self.user = user
