@@ -6,3 +6,13 @@ class Relevance:
     self.topic = topic
     self.document = document
     self.relevance_level = uint8(relevance_level)
+    self.document.add_relevance( self )
+
+  def is_relevant(self):
+    return self.relevance_level > 0
+
+  def is_highly_relevant(self):
+    return self.relevance_level == 2
+
+  def is_moderately_relevant(self):
+    return self.relevance_level == 1

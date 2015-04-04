@@ -1,3 +1,6 @@
+from document import Document
+
+
 class Action:
 
   DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank' ]
@@ -30,6 +33,11 @@ class Action:
   def by_type( cls, type ):
     return cls.type_dict.get( type )
 
+  @classmethod
+  def filter_by_type( cls, type, filter_func ):
+    actions_by_type = cls.by_type( type )
+    return filter( filter_func, actions_by_type )
+
   def __init__(self, timestamp, user, condition, topic, action_type, action_parameters):
     self.timestamp = timestamp
     self.user = user
@@ -43,7 +51,13 @@ class Action:
   def __parse_action_parameters(self):
     params_list = str(self.bare_action_parameters).split(' ')
     params_order = Action.PARAMS[ self.action_type ]
-    self.action_parameters = dict(zip(params_order, params_list))
+    for param_name, param_value in zip(params_order, params_list):
+      setattr(self, param_name, param_value)
+    self.__init_action_parameter_objects()
+
+  def __init_action_parameter_objects(self):
+    if hasattr(self, 'document_id'):
+      self.document = Document.create_or_update( self.document_id )
 
   def __index( self ):
     self.__class__.index_by_type( self )
