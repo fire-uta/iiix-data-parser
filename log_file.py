@@ -12,7 +12,7 @@ from action import Action
 def _parse_line( line ):
   log_line_data_order = ['date', 'time', 'loglevel', 'user_id', 'condition',
     'topic_order_number', 'topic_id', 'action', 'action_parameters']
-  line_as_list = line.split(' ', len( log_line_data_order ) - 1)
+  line_as_list = line.strip().split(' ', len( log_line_data_order ) - 1)
   return dict(zip(log_line_data_order,line_as_list))
 
 
