@@ -10,6 +10,7 @@ from document import Document
 from query import Query
 from topic import Topic
 from user import User
+from condition import Condition
 
 
 def error_exit():
@@ -69,3 +70,4 @@ print "Queries: %i" % len(Query.store)
 print "Topics: %i: %s" % (len(Topic.store), Topic.store.keys())
 print "Users: %i" % len(User.store)
 print "Documents: %i" % len(Document.store)
+print "Conditions: %i: %s" % (len(Condition.store), Condition.store.keys())

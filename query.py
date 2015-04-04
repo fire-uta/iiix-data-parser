@@ -1,4 +1,5 @@
 from numpy import uint16
+from numpy import bool_
 
 
 from query_result_list import QueryResultList
@@ -13,7 +14,7 @@ class Query(DataRecord, HasActions):
     self.result_list = result_list
     self.user = user
     self.condition = condition
-    self.autocomplete = autocomplete
+    self.autocomplete = bool_(autocomplete)
     self.query_text = query_text
     if result_list is None: self.result_list = QueryResultList(self)
 
