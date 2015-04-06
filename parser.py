@@ -11,6 +11,7 @@ from query import Query
 from topic import Topic
 from user import User
 from condition import Condition
+from action import Action
 
 
 def error_exit():
@@ -71,3 +72,74 @@ print "Topics: %i: %s" % (len(Topic.store), Topic.store.keys())
 print "Users: %i" % len(User.store)
 print "Documents: %i" % len(Document.store)
 print "Conditions: %i: %s" % (len(Condition.store), Condition.store.keys())
+print "Action types: %i: %s" % (len(Action.type_dict.keys()), Action.type_dict.keys())
+
+print "Mark-doc-as-viewed actions: %i" % (
+  len(Action.by_type('DOC_MARKED_VIEWED')))
+print "Mark-doc-as-viewed actions with a moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.moderately_relevant_filter)))
+print "Mark-doc-as-viewed actions with a highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.highly_relevant_filter)))
+
+print "Mark-doc-as-relevant actions: %i" % (
+  len(Action.by_type('DOC_MARKED_RELEVANT')))
+print "Mark-doc-as-relevant actions with a moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.moderately_relevant_filter)))
+print "Mark-doc-as-relevant actions with a highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.highly_relevant_filter)))
+
+print "Mark-doc-as-viewed actions with no delays: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.no_delays_filter)))
+print "Mark-doc-as-viewed actions with no delays and moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combine_filters( Action.no_delays_filter, Action.moderately_relevant_filter))))
+print "Mark-doc-as-viewed actions with no delays and highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combine_filters( Action.no_delays_filter, Action.highly_relevant_filter))))
+
+print "Mark-doc-as-relevant actions with no delays: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.no_delays_filter)))
+print "Mark-doc-as-relevant actions with no delays and moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combine_filters( Action.no_delays_filter, Action.moderately_relevant_filter))))
+print "Mark-doc-as-relevant actions with no delays and highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combine_filters( Action.no_delays_filter, Action.highly_relevant_filter))))
+
+print "Mark-doc-as-viewed actions with query delays: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.query_delay_filter)))
+print "Mark-doc-as-viewed actions with query delays and moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combine_filters( Action.query_delay_filter, Action.moderately_relevant_filter))))
+print "Mark-doc-as-viewed actions with query delays and highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combine_filters( Action.query_delay_filter, Action.highly_relevant_filter))))
+
+print "Mark-doc-as-relevant actions with query delays: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.query_delay_filter)))
+print "Mark-doc-as-relevant actions with query delays and moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combine_filters( Action.query_delay_filter, Action.moderately_relevant_filter))))
+print "Mark-doc-as-relevant actions with query delays and highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combine_filters( Action.query_delay_filter, Action.highly_relevant_filter))))
+
+print "Mark-doc-as-viewed actions with document delays: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.document_delay_filter)))
+print "Mark-doc-as-viewed actions with document delays and moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combine_filters( Action.document_delay_filter, Action.moderately_relevant_filter))))
+print "Mark-doc-as-viewed actions with document delays and highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combine_filters( Action.document_delay_filter, Action.highly_relevant_filter))))
+
+print "Mark-doc-as-relevant actions with document delays: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.document_delay_filter)))
+print "Mark-doc-as-relevant actions with document delays and moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combine_filters( Action.document_delay_filter, Action.moderately_relevant_filter))))
+print "Mark-doc-as-relevant actions with document delays and highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combine_filters( Action.document_delay_filter, Action.highly_relevant_filter))))
+
+print "Mark-doc-as-viewed actions with both delays: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combined_delay_filter)))
+print "Mark-doc-as-viewed actions with both delays and moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combine_filters( Action.combined_delay_filter, Action.moderately_relevant_filter))))
+print "Mark-doc-as-viewed actions with both delays and highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_VIEWED', Action.combine_filters( Action.combined_delay_filter, Action.highly_relevant_filter))))
+
+print "Mark-doc-as-relevant actions with both delays: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combined_delay_filter)))
+print "Mark-doc-as-relevant actions with both delays and moderately relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combine_filters( Action.combined_delay_filter, Action.moderately_relevant_filter))))
+print "Mark-doc-as-relevant actions with both delays and highly relevant doc: %i" % (
+  len(Action.filter_by_type('DOC_MARKED_RELEVANT', Action.combine_filters( Action.combined_delay_filter, Action.highly_relevant_filter))))
