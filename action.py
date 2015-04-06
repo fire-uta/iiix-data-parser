@@ -3,6 +3,19 @@ from document import Document
 
 class Action:
 
+  highly_relevant_filter = lambda action: action.document_is_highly_relevant()
+  moderately_relevant_filter = lambda action: action.document_is_moderately_relevant()
+  relevant_filter = lambda action: action.document_is_relevant()
+
+  no_delays_filter = lambda action: action.condition.record_id == 6
+  query_delay_filter = lambda action: action.condition.record_id == 7
+  document_delay_filter = lambda action: action.condition.record_id == 8
+  combined_delay_filter = lambda action: action.condition.record_id == 9
+
+  @staticmethod
+  def combine_filters( *filters ):
+    return lambda action: all([fil( action ) for fil in filters])
+
   DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank' ]
   QUERY_EVENT_PARAMS = [ 'query_id', 'query_text' ]
 
@@ -24,7 +37,7 @@ class Action:
   type_dict = {}
 
   @classmethod
-  def index_by_type( cls, action ):
+  def __index_by_type( cls, action ):
     if not action.action_type in cls.type_dict:
       cls.type_dict[ action.action_type ] = []
     cls.type_dict[ action.action_type ].append( action )
@@ -60,4 +73,13 @@ class Action:
       self.document = Document.create_or_update( self.document_id )
 
   def __index( self ):
-    self.__class__.index_by_type( self )
+    self.__class__.__index_by_type( self )
+
+  def document_is_highly_relevant( self ):
+    return self.document.is_highly_relevant_for_topic( self.topic )
+
+  def document_is_moderately_relevant( self ):
+    return self.document.is_moderately_relevant_for_topic( self.topic )
+
+  def document_is_relevant( self ):
+    return self.document.is_relevant_for_topic( self.topic )
