@@ -29,3 +29,9 @@ class Document(DataRecord):
 
   def is_highly_relevant_for_topic_id(self, topic_id):
     return self.get_relevance_for_topic_id( topic_id ).is_highly_relevant()
+
+  def is_moderately_relevant_for_topic(self, topic):
+    return self.is_moderately_relevant_for_topic_id( topic.record_id )
+
+  def is_moderately_relevant_for_topic_id(self, topic_id):
+    return self.get_relevance_for_topic_id( topic_id ).is_moderately_relevant()
