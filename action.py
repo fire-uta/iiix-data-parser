@@ -51,11 +51,10 @@ class Action:
     actions_by_type = cls.by_type( type )
     return filter( filter_func, actions_by_type )
 
-  def __init__(self, timestamp, user, condition, topic, action_type, action_parameters):
+  def __init__(self, timestamp, condition, session, action_type, action_parameters):
     self.timestamp = timestamp
-    self.user = user
+    self.session = session
     self.condition = condition
-    self.topic = topic
     self.action_type = action_type
     self.bare_action_parameters = action_parameters
     self.__parse_action_parameters()
@@ -76,10 +75,10 @@ class Action:
     self.__class__.__index_by_type( self )
 
   def document_is_highly_relevant( self ):
-    return self.document.is_highly_relevant_for_topic( self.topic )
+    return self.document.is_highly_relevant_for_topic( self.session.topic )
 
   def document_is_moderately_relevant( self ):
-    return self.document.is_moderately_relevant_for_topic( self.topic )
+    return self.document.is_moderately_relevant_for_topic( self.session.topic )
 
   def document_is_relevant( self ):
-    return self.document.is_relevant_for_topic( self.topic )
+    return self.document.is_relevant_for_topic( self.session.topic )
