@@ -83,6 +83,9 @@ class Action:
     if self.action_type == 'DOC_MARKED_VIEWED':
       seen_results = self.query.results_up_to_rank( self.rank )
       self.session.add_seen_documents( *[result.document for result in seen_results] )
+      self.session.add_viewed_documents( self.document )
+    elif self.action_type == 'DOC_MARKED_RELEVANT':
+      self.session.add_marked_relevant_documents( self.document )
 
   def __update_global_stats( self ):
     if hasattr( self, 'rank' ) and int(self.rank) > Action.global_highest_rank:
