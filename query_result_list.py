@@ -2,8 +2,8 @@ from query_result_document import QueryResultDocument
 
 
 class QueryResultList:
-  def __init__(self, query, result_documents = []):
-    self.result_documents = result_documents # Guaranteed to be in rank order
+  def __init__(self, query):
+    self.result_documents = [] # Guaranteed to be in rank order
     self.query = query
 
   def add( self, rank, document ):
@@ -11,3 +11,6 @@ class QueryResultList:
 
   def results_up_to_rank( self, rank ):
     return self.result_documents[:int(rank)]
+
+  def length( self ):
+    return len( self.result_documents )
