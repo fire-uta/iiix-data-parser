@@ -36,6 +36,8 @@ class Action:
 
   type_dict = {}
 
+  global_highest_rank = 0
+
   @classmethod
   def __index_by_type( cls, action ):
     if not action.action_type in cls.type_dict:
@@ -60,6 +62,7 @@ class Action:
     self.bare_action_parameters = action_parameters
     self.__parse_action_parameters()
     self.__update_session()
+    self.__update_global_stats()
     self.__index()
 
   def __parse_action_parameters(self):
@@ -80,6 +83,10 @@ class Action:
     if self.action_type == 'DOC_MARKED_VIEWED':
       seen_results = self.query.results_up_to_rank( self.rank )
       self.session.add_seen_documents( *[result.document for result in seen_results] )
+
+  def __update_global_stats( self ):
+    if hasattr( self, 'rank' ) and int(self.rank) > Action.global_highest_rank:
+      Action.global_highest_rank = int(self.rank)
 
   def document_is_highly_relevant( self ):
     return self.document.is_highly_relevant_for_topic( self.session.topic )
