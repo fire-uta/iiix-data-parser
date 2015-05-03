@@ -12,6 +12,7 @@ from topic import Topic
 from user import User
 from condition import Condition
 from action import Action
+from session import Session
 
 
 def error_exit():
@@ -78,6 +79,7 @@ queries_file = QueriesSummaryFile( get_queries_file_name() )
 print "Queries: %i" % len(Query.store)
 print "Topics: %i: %s" % (len(Topic.store), Topic.store.keys())
 print "Users: %i" % len(User.store)
+print "Sessions: %i" % len(Session.store)
 print "Documents: %i" % len(Document.store)
 print "Conditions: %i: %s" % (len(Condition.store), Condition.store.keys())
 print "Action types: %i: %s" % (len(Action.type_dict.keys()), Action.type_dict.keys())

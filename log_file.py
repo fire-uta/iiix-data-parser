@@ -44,6 +44,7 @@ class LogFile(DataFile):
           timestamp = _parse_datetime( parsed_line['date'], parsed_line['time'] )
           action = Action( timestamp = timestamp, session = self.session,
             condition = condition, action_type = parsed_line['action'],
+            query = self.query,
             action_parameters = parsed_line.get('action_parameters', None) )
           actions.append( action )
 

@@ -20,3 +20,6 @@ class Query(DataRecord, HasActions):
 
   def add_to_result_list( self, rank, document ):
     self.result_list.add( rank, document )
+
+  def results_up_to_rank( self, rank ):
+    return self.result_list.results_up_to_rank( rank )

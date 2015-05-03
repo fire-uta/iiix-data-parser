@@ -51,13 +51,15 @@ class Action:
     actions_by_type = cls.by_type( type )
     return filter( filter_func, actions_by_type )
 
-  def __init__(self, timestamp, condition, session, action_type, action_parameters):
+  def __init__(self, timestamp, condition, session, action_type, query, action_parameters):
     self.timestamp = timestamp
     self.session = session
     self.condition = condition
     self.action_type = action_type
+    self.query = query
     self.bare_action_parameters = action_parameters
     self.__parse_action_parameters()
+    self.__update_session()
     self.__index()
 
   def __parse_action_parameters(self):
@@ -73,6 +75,11 @@ class Action:
 
   def __index( self ):
     self.__class__.__index_by_type( self )
+
+  def __update_session( self ):
+    if self.action_type == 'DOC_MARKED_VIEWED':
+      seen_results = self.query.results_up_to_rank( self.rank )
+      self.session.add_seen_documents( *[result.document for result in seen_results] )
 
   def document_is_highly_relevant( self ):
     return self.document.is_highly_relevant_for_topic( self.session.topic )

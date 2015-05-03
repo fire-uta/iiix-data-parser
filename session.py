@@ -7,6 +7,11 @@ class Session(DataRecord):
     self.topic = topic
     self.user = user
 
+  def add_seen_documents(self, *documents):
+    if not hasattr(self, 'seen_documents'):
+      self.seen_documents = []
+    self.seen_documents.extend( documents )
+
   @classmethod
   def build_session_id( cls, user_id, topic_id ):
     return str( user_id ) + '-' + str( topic_id )
