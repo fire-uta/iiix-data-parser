@@ -23,6 +23,17 @@ class Session(DataRecord):
     for document in documents:
       self.marked_relevant_documents[ document.record_id ] = document
 
+  def seen_highly_relevant_documents(self):
+    return [document for document in self.seen_documents.values() if document.is_highly_relevant_for_topic( self.topic )]
+
+  def seen_moderately_relevant_documents(self):
+    return [document for document in self.seen_documents.values() if document.is_moderately_relevant_for_topic( self.topic )]
+
   @classmethod
   def build_session_id( cls, user_id, topic_id ):
     return str( user_id ) + '-' + str( topic_id )
+
+  @classmethod
+  def amount_of_seen_highly_relevant_documents(cls):
+    sessions = cls.get_store().values()
+    return reduce( lambda acc, session: acc + len(session.seen_highly_relevant_documents()), sessions, 0 )
