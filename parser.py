@@ -39,11 +39,14 @@ def parse_result_files():
   opts = get_cli_options()
   results_dir = opts.results
   if results_dir is None: error_exit()
-  sys.stdout.write( 'Parsing result files' )
   for dirname, dirnames, filenames in os.walk( results_dir ):
-    for filename in filenames:
+    files_count = len( filenames )
+    every_tenth = int( files_count / 10 )
+    sys.stdout.write( "Parsing %i result files" % files_count )
+    for idx, filename in enumerate(filenames):
       if not filename.endswith('.serp'): continue
       sys.stdout.write( '.' )
+      if idx % every_tenth == 0: sys.stdout.write(str(idx))
       sys.stdout.flush()
       result_files.append( ResultFile( os.path.join( dirname, filename ) ) )
   sys.stdout.write( '\n' )
@@ -55,11 +58,14 @@ def parse_log_files():
   opts = get_cli_options()
   log_dir = opts.logs
   if log_dir is None: error_exit()
-  sys.stdout.write( 'Parsing log files' )
   for dirname, dirnames, filenames in os.walk( log_dir ):
-    for filename in filenames:
+    files_count = len( filenames )
+    every_tenth = int( files_count / 10 )
+    sys.stdout.write( "Parsing %i log files" % files_count )
+    for idx, filename in enumerate(filenames):
       if not filename.endswith('.log'): continue
       sys.stdout.write( '.' )
+      if idx % every_tenth == 0: sys.stdout.write(str(idx))
       sys.stdout.flush()
       log_files.append( LogFile( os.path.join( dirname, filename ) ) )
   sys.stdout.write( '\n' )
