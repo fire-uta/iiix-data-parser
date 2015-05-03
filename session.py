@@ -9,8 +9,9 @@ class Session(DataRecord):
 
   def add_seen_documents(self, *documents):
     if not hasattr(self, 'seen_documents'):
-      self.seen_documents = []
-    self.seen_documents.extend( documents )
+      self.seen_documents = {}
+    for document in documents:
+      self.seen_documents[ document.record_id ] = document
 
   @classmethod
   def build_session_id( cls, user_id, topic_id ):
