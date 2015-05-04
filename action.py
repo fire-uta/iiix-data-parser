@@ -80,6 +80,8 @@ class Action:
     self.__class__.__index_by_type( self )
 
   def __update_session( self ):
+    self.session.add_action( self )
+
     if self.action_type == 'DOC_MARKED_VIEWED':
       self.session.add_viewed_documents( self.document )
 

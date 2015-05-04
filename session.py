@@ -20,9 +20,14 @@ class Session(DataRecord):
     self.user = user
     self.condition = condition
 
+    self.actions = {}
+
     self.seen_documents = {}
     self.viewed_documents = {}
     self.marked_relevant_documents = {}
+
+  def add_action(self, action):
+    self.actions[ action.timestamp ] = action
 
   def add_seen_documents(self, *documents):
     for document in documents:
@@ -53,6 +58,13 @@ class Session(DataRecord):
 
   def viewed_non_relevant_documents(self):
     return [document for document in self.viewed_documents.values() if not document.is_relevant_for_topic( self.topic )]
+
+  def duration_in_seconds(self):
+    timestamps = sorted(self.actions.keys())
+    first_timestamp = timestamps[0]
+    last_timestamp = timestamps[-1]
+    delta = last_timestamp - first_timestamp
+    return delta.total_seconds()
 
   @classmethod
   def build_session_id( cls, user_id, topic_id ):
@@ -87,3 +99,8 @@ class Session(DataRecord):
   def amount_of_viewed_non_relevant_documents(cls, filter_func = identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + len(session.viewed_non_relevant_documents()), filter(filter_func, sessions), 0 )
+
+  @classmethod
+  def average_session_duration_in_seconds(cls, filter_func = identity_filter):
+    sessions = cls.get_store().values()
+    return reduce( lambda acc, session: acc + session.duration_in_seconds(), filter(filter_func, sessions), 0 ) / len(sessions)
