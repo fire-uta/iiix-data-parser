@@ -29,6 +29,7 @@ class LogFile(DataFile):
     self.topic = Topic.create_or_update( result_file_info['topic_id'] )
     self.user = User.create_or_update( result_file_info['user_id'] )
     self.query = Query.create_or_update( result_file_info['query_id'], topic = self.topic, user = self.user )
+    self.condition = Condition.create_or_update( result_file_info['condition'] )
     self.__create_or_update_session()
     self.actions = self.__parse()
     self.topic.add_actions( self.actions )
@@ -40,7 +41,7 @@ class LogFile(DataFile):
     with open( self.file_name, 'rb' ) as log_file:
       for line in log_file:
           parsed_line = _parse_line( line )
-          condition = Condition.create_or_update( parsed_line['condition'] )
+          condition = self.condition
           timestamp = _parse_datetime( parsed_line['date'], parsed_line['time'] )
           action = Action( timestamp = timestamp, session = self.session,
             condition = condition, action_type = parsed_line['action'],
@@ -53,4 +54,4 @@ class LogFile(DataFile):
   def __create_or_update_session( self ):
     session_id = Session.build_session_id( self.user.record_id,
       self.topic.record_id )
-    self.session = Session.create_or_update( session_id, user = self.user, topic = self.topic )
+    self.session = Session.create_or_update( session_id, user = self.user, topic = self.topic, condition = self.condition )
