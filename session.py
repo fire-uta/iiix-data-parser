@@ -2,6 +2,18 @@ from data_record import DataRecord
 
 
 class Session(DataRecord):
+
+  no_delays_filter = lambda session: session.condition.record_id == str(6)
+  query_delay_filter = lambda session: session.condition.record_id == str(7)
+  document_delay_filter = lambda session: session.condition.record_id == str(8)
+  combined_delay_filter = lambda session: session.condition.record_id == str(9)
+
+  identity_filter = lambda session: True
+
+  @staticmethod
+  def combine_filters( *filters ):
+    return lambda session: all([fil( session ) for fil in filters])
+
   def __init__(self, session_id, user, topic, condition):
     DataRecord.__init__( self, session_id )
     self.topic = topic
@@ -47,31 +59,31 @@ class Session(DataRecord):
     return str( user_id ) + '-' + str( topic_id )
 
   @classmethod
-  def amount_of_seen_highly_relevant_documents(cls):
+  def amount_of_seen_highly_relevant_documents(cls, filter_func = identity_filter):
     sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.seen_highly_relevant_documents()), sessions, 0 )
+    return reduce( lambda acc, session: acc + len(session.seen_highly_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_viewed_highly_relevant_documents(cls):
+  def amount_of_viewed_highly_relevant_documents(cls, filter_func = identity_filter):
     sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.viewed_highly_relevant_documents()), sessions, 0 )
+    return reduce( lambda acc, session: acc + len(session.viewed_highly_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_seen_moderately_relevant_documents(cls):
+  def amount_of_seen_moderately_relevant_documents(cls, filter_func = identity_filter):
     sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.seen_moderately_relevant_documents()), sessions, 0 )
+    return reduce( lambda acc, session: acc + len(session.seen_moderately_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_viewed_moderately_relevant_documents(cls):
+  def amount_of_viewed_moderately_relevant_documents(cls, filter_func = identity_filter):
     sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.viewed_moderately_relevant_documents()), sessions, 0 )
+    return reduce( lambda acc, session: acc + len(session.viewed_moderately_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_seen_non_relevant_documents(cls):
+  def amount_of_seen_non_relevant_documents(cls, filter_func = identity_filter):
     sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.seen_non_relevant_documents()), sessions, 0 )
+    return reduce( lambda acc, session: acc + len(session.seen_non_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_viewed_non_relevant_documents(cls):
+  def amount_of_viewed_non_relevant_documents(cls, filter_func = identity_filter):
     sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.viewed_non_relevant_documents()), sessions, 0 )
+    return reduce( lambda acc, session: acc + len(session.viewed_non_relevant_documents()), filter(filter_func, sessions), 0 )
