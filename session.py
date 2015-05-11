@@ -82,6 +82,11 @@ class Session(DataRecord, HasActions):
         read_times[ document.record_id ] = action_duration
     return sum(read_times.values()) / len(read_times)
 
+  def average_query_formulation_time_in_seconds(self):
+    query_start_actions = self.actions_by_type( 'QUERY_FOCUS' )
+    querying_durations = [self.action_duration_in_seconds_for( idx, action ) for idx, action in query_start_actions]
+    return sum(querying_durations) / len(querying_durations)
+
   @classmethod
   def build_session_id( cls, user_id, topic_id ):
     return str( user_id ) + '-' + str( topic_id )
@@ -126,3 +131,7 @@ class Session(DataRecord, HasActions):
     sessions = filter( filter_func, cls.get_store().values() )
     return reduce( lambda acc, session: acc + session.average_document_reading_time_in_seconds(), sessions, 0 ) / len(sessions)
 
+  @classmethod
+  def global_average_query_formulation_time_in_seconds(cls, filter_func = identity_filter):
+    sessions = filter( filter_func, cls.get_store().values() )
+    return reduce( lambda acc, session: acc + session.average_query_formulation_time_in_seconds(), sessions, 0 ) / len(sessions)
