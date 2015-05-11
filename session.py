@@ -61,6 +61,27 @@ class Session(DataRecord, HasActions):
     delta = last_timestamp - first_timestamp
     return delta.total_seconds()
 
+  def actions_by_type( self, action_type ):
+    return [(idx,action) for idx, action in enumerate(self.actions) if action.action_type == action_type]
+
+  def action_duration_in_seconds_for( self, idx, action ):
+    next_timestamp = self.actions[ idx + 1 ].timestamp
+    current_timestamp = action.timestamp
+    delta = next_timestamp - current_timestamp
+    return delta.total_seconds()
+
+  def average_document_reading_time_in_seconds(self):
+    read_actions = self.actions_by_type( 'DOC_MARKED_VIEWED' )
+    read_times = {}
+    for idx, action in read_actions:
+      action_duration = self.action_duration_in_seconds_for( idx, action )
+      document = action.document
+      if read_times.has_key( document.record_id ):
+        read_times[ document.record_id ] += action_duration
+      else:
+        read_times[ document.record_id ] = action_duration
+    return sum(read_times.values()) / len(read_times)
+
   @classmethod
   def build_session_id( cls, user_id, topic_id ):
     return str( user_id ) + '-' + str( topic_id )
@@ -97,5 +118,11 @@ class Session(DataRecord, HasActions):
 
   @classmethod
   def average_duration_in_seconds(cls, filter_func = identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + session.duration_in_seconds(), filter(filter_func, sessions), 0 ) / len(sessions)
+    sessions = filter( filter_func, cls.get_store().values() )
+    return reduce( lambda acc, session: acc + session.duration_in_seconds(), sessions, 0 ) / len(sessions)
+
+  @classmethod
+  def global_average_document_reading_time_in_seconds(cls, filter_func = identity_filter):
+    sessions = filter( filter_func, cls.get_store().values() )
+    return reduce( lambda acc, session: acc + session.average_document_reading_time_in_seconds(), sessions, 0 ) / len(sessions)
+
