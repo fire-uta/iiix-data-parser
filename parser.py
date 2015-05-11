@@ -94,26 +94,36 @@ print "--- ALL SESSIONS ---"
 print "Highly relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_highly_relevant_documents(), Session.amount_of_viewed_highly_relevant_documents())
 print "Moderately relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_moderately_relevant_documents(), Session.amount_of_viewed_moderately_relevant_documents())
 print "Non-relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_non_relevant_documents(), Session.amount_of_viewed_non_relevant_documents())
+print "Average document reading time: %s sec" % Session.global_average_document_reading_time_in_seconds()
+print "Average query formulation time: %s sec" % Session.global_average_query_formulation_time_in_seconds()
 
 print "--- NON-DELAYED SESSIONS ---"
 print "Highly relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_highly_relevant_documents( Session.no_delays_filter ), Session.amount_of_viewed_highly_relevant_documents( Session.no_delays_filter ))
 print "Moderately relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_moderately_relevant_documents(Session.no_delays_filter), Session.amount_of_viewed_moderately_relevant_documents(Session.no_delays_filter))
 print "Non-relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_non_relevant_documents(Session.no_delays_filter), Session.amount_of_viewed_non_relevant_documents(Session.no_delays_filter))
+print "Average document reading time: %s sec" % Session.global_average_document_reading_time_in_seconds( Session.no_delays_filter )
+print "Average query formulation time: %s sec" % Session.global_average_query_formulation_time_in_seconds( Session.no_delays_filter )
 
 print "--- QUERY DELAY SESSIONS ---"
 print "Highly relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_highly_relevant_documents( Session.query_delay_filter ), Session.amount_of_viewed_highly_relevant_documents( Session.query_delay_filter ))
 print "Moderately relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_moderately_relevant_documents(Session.query_delay_filter), Session.amount_of_viewed_moderately_relevant_documents(Session.query_delay_filter))
 print "Non-relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_non_relevant_documents(Session.query_delay_filter), Session.amount_of_viewed_non_relevant_documents(Session.query_delay_filter))
+print "Average document reading time: %s sec" % Session.global_average_document_reading_time_in_seconds( Session.query_delay_filter )
+print "Average query formulation time: %s sec" % Session.global_average_query_formulation_time_in_seconds( Session.query_delay_filter )
 
 print "--- DOCUMENT DELAY SESSIONS ---"
 print "Highly relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_highly_relevant_documents( Session.document_delay_filter ), Session.amount_of_viewed_highly_relevant_documents( Session.document_delay_filter ))
 print "Moderately relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_moderately_relevant_documents(Session.document_delay_filter), Session.amount_of_viewed_moderately_relevant_documents(Session.document_delay_filter))
 print "Non-relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_non_relevant_documents(Session.document_delay_filter), Session.amount_of_viewed_non_relevant_documents(Session.document_delay_filter))
+print "Average document reading time: %s sec" % Session.global_average_document_reading_time_in_seconds( Session.document_delay_filter )
+print "Average query formulation time: %s sec" % Session.global_average_query_formulation_time_in_seconds( Session.document_delay_filter )
 
 print "--- COMBINED DELAY SESSIONS ---"
 print "Highly relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_highly_relevant_documents( Session.combined_delay_filter ), Session.amount_of_viewed_highly_relevant_documents( Session.combined_delay_filter ))
 print "Moderately relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_moderately_relevant_documents(Session.combined_delay_filter), Session.amount_of_viewed_moderately_relevant_documents(Session.combined_delay_filter))
 print "Non-relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_non_relevant_documents(Session.combined_delay_filter), Session.amount_of_viewed_non_relevant_documents(Session.combined_delay_filter))
+print "Average document reading time: %s sec" % Session.global_average_document_reading_time_in_seconds( Session.combined_delay_filter )
+print "Average query formulation time: %s sec" % Session.global_average_query_formulation_time_in_seconds( Session.combined_delay_filter )
 
 print "-- MISC --"
 print "Average session duration: %s sec" % Session.average_duration_in_seconds()
