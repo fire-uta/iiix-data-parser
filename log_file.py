@@ -35,6 +35,7 @@ class LogFile(DataFile):
     self.topic.add_actions( self.actions )
     self.user.add_actions( self.actions )
     self.query.add_actions( self.actions )
+    self.session.add_actions( self.actions )
 
   def __parse( self ):
     actions = []
@@ -49,7 +50,7 @@ class LogFile(DataFile):
             action_parameters = parsed_line.get('action_parameters', None) )
           actions.append( action )
 
-    return actions
+    return sorted(actions, key = lambda action: action.timestamp)
 
   def __create_or_update_session( self ):
     session_id = Session.build_session_id( self.user.record_id,

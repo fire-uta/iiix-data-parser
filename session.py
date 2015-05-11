@@ -1,7 +1,8 @@
 from data_record import DataRecord
+from has_actions import HasActions
 
 
-class Session(DataRecord):
+class Session(DataRecord, HasActions):
 
   no_delays_filter = lambda session: session.condition.record_id == str(6)
   query_delay_filter = lambda session: session.condition.record_id == str(7)
@@ -20,14 +21,9 @@ class Session(DataRecord):
     self.user = user
     self.condition = condition
 
-    self.actions = {}
-
     self.seen_documents = {}
     self.viewed_documents = {}
     self.marked_relevant_documents = {}
-
-  def add_action(self, action):
-    self.actions[ action.timestamp ] = action
 
   def add_seen_documents(self, *documents):
     for document in documents:
@@ -60,9 +56,8 @@ class Session(DataRecord):
     return [document for document in self.viewed_documents.values() if not document.is_relevant_for_topic( self.topic )]
 
   def duration_in_seconds(self):
-    timestamps = sorted(self.actions.keys())
-    first_timestamp = timestamps[0]
-    last_timestamp = timestamps[-1]
+    first_timestamp = self.actions[0].timestamp
+    last_timestamp = self.actions[-1].timestamp
     delta = last_timestamp - first_timestamp
     return delta.total_seconds()
 
@@ -101,6 +96,6 @@ class Session(DataRecord):
     return reduce( lambda acc, session: acc + len(session.viewed_non_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def average_session_duration_in_seconds(cls, filter_func = identity_filter):
+  def average_duration_in_seconds(cls, filter_func = identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + session.duration_in_seconds(), filter(filter_func, sessions), 0 ) / len(sessions)
