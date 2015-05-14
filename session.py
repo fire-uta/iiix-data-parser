@@ -1,19 +1,9 @@
 from data_record import DataRecord
 from has_actions import HasActions
+from filterable import Filterable
 
 
-class Session(DataRecord, HasActions):
-
-  no_delays_filter = lambda session: session.condition.record_id == str(6)
-  query_delay_filter = lambda session: session.condition.record_id == str(7)
-  document_delay_filter = lambda session: session.condition.record_id == str(8)
-  combined_delay_filter = lambda session: session.condition.record_id == str(9)
-
-  identity_filter = lambda session: True
-
-  @staticmethod
-  def combine_filters( *filters ):
-    return lambda session: all([fil( session ) for fil in filters])
+class Session(DataRecord, HasActions, Filterable):
 
   def __init__(self, session_id, user, topic, condition):
     DataRecord.__init__( self, session_id )
@@ -83,46 +73,46 @@ class Session(DataRecord, HasActions):
     return str( user_id ) + '-' + str( topic_id )
 
   @classmethod
-  def amount_of_seen_highly_relevant_documents(cls, filter_func = identity_filter):
+  def amount_of_seen_highly_relevant_documents(cls, filter_func = Filterable.identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + len(session.seen_highly_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_viewed_highly_relevant_documents(cls, filter_func = identity_filter):
+  def amount_of_viewed_highly_relevant_documents(cls, filter_func = Filterable.identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + len(session.viewed_highly_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_seen_moderately_relevant_documents(cls, filter_func = identity_filter):
+  def amount_of_seen_moderately_relevant_documents(cls, filter_func = Filterable.identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + len(session.seen_moderately_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_viewed_moderately_relevant_documents(cls, filter_func = identity_filter):
+  def amount_of_viewed_moderately_relevant_documents(cls, filter_func = Filterable.identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + len(session.viewed_moderately_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_seen_non_relevant_documents(cls, filter_func = identity_filter):
+  def amount_of_seen_non_relevant_documents(cls, filter_func = Filterable.identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + len(session.seen_non_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def amount_of_viewed_non_relevant_documents(cls, filter_func = identity_filter):
+  def amount_of_viewed_non_relevant_documents(cls, filter_func = Filterable.identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + len(session.viewed_non_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
-  def average_duration_in_seconds(cls, filter_func = identity_filter):
+  def average_duration_in_seconds(cls, filter_func = Filterable.identity_filter):
     sessions = filter( filter_func, cls.get_store().values() )
     return reduce( lambda acc, session: acc + session.duration_in_seconds(), sessions, 0 ) / len(sessions)
 
   @classmethod
-  def global_average_document_reading_time_in_seconds(cls, filter_func = identity_filter):
+  def global_average_document_reading_time_in_seconds(cls, filter_func = Filterable.identity_filter):
     sessions = filter( filter_func, cls.get_store().values() )
     return reduce( lambda acc, session: acc + session.average_document_reading_time_in_seconds(), sessions, 0 ) / len(sessions)
 
   @classmethod
-  def global_average_query_formulation_time_in_seconds(cls, filter_func = identity_filter):
+  def global_average_query_formulation_time_in_seconds(cls, filter_func = Filterable.identity_filter):
     sessions = filter( filter_func, cls.get_store().values() )
     return reduce( lambda acc, session: acc + session.average_query_formulation_time_in_seconds(), sessions, 0 ) / len(sessions)
