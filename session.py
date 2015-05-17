@@ -51,8 +51,11 @@ class Session(DataRecord, HasActions, Filterable):
     delta = last_timestamp - first_timestamp
     return delta.total_seconds()
 
-  def average_document_reading_time_in_seconds(self):
-    read_actions = self.actions_by_type( 'DOC_MARKED_VIEWED' )
+  def document_read_actions(self):
+    return self.actions_by_type( 'DOC_MARKED_VIEWED' )
+
+  def document_read_times(self):
+    read_actions = self.document_read_actions()
     read_times = {}
     for idx, action in read_actions:
       action_duration = self.action_duration_in_seconds_for( idx, action )
@@ -61,6 +64,10 @@ class Session(DataRecord, HasActions, Filterable):
         read_times[ document.record_id ] += action_duration
       else:
         read_times[ document.record_id ] = action_duration
+    return read_times
+
+  def average_document_reading_time_in_seconds(self):
+    read_times = self.document_read_times()
     return sum(read_times.values()) / len(read_times)
 
   def average_query_formulation_time_in_seconds(self):
