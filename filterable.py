@@ -6,6 +6,10 @@ class Filterable:
 
   practice_topic_reject_filter = lambda filterable: filterable.topic.record_id != str(367)
 
+  @staticmethod
+  def topic_filter( topic_id ):
+    return lambda filterable: filterable.topic.record_id == str( topic_id )
+
   identity_filter = lambda filterable: True
 
   @staticmethod
