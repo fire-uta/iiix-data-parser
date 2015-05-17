@@ -4,6 +4,8 @@ class Filterable:
   document_delay_filter = lambda filterable: filterable.condition.record_id == str(8)
   combined_delay_filter = lambda filterable: filterable.condition.record_id == str(9)
 
+  practice_topic_reject_filter = lambda filterable: filterable.topic.record_id != str(367)
+
   identity_filter = lambda filterable: True
 
   @staticmethod
