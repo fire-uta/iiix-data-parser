@@ -111,8 +111,3 @@ class Session(DataRecord, HasActions, Filterable):
   def global_average_document_reading_time_in_seconds(cls, filter_func = Filterable.identity_filter):
     sessions = filter( filter_func, cls.get_store().values() )
     return reduce( lambda acc, session: acc + session.average_document_reading_time_in_seconds(), sessions, 0 ) / len(sessions)
-
-  @classmethod
-  def global_average_query_formulation_time_in_seconds(cls, filter_func = Filterable.identity_filter):
-    sessions = filter( filter_func, cls.get_store().values() )
-    return reduce( lambda acc, session: acc + session.average_query_formulation_time_in_seconds(), sessions, 0 ) / len(sessions)
