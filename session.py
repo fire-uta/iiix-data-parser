@@ -17,6 +17,11 @@ class Session(DataRecord, HasActions, Filterable):
     self.seen_documents = {}
     self.viewed_documents = {}
     self.marked_relevant_documents = {}
+    self.queries = {}
+
+  def add_query(self, query):
+    self.queries[query.record_id] = query
+    query.session = self
 
   def add_seen_documents(self, *documents):
     for document in documents:

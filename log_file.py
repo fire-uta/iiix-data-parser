@@ -28,14 +28,15 @@ class LogFile(DataFile):
     result_file_info = self._get_file_info()
     self.topic = Topic.create_or_update( result_file_info['topic_id'] )
     self.user = User.create_or_update( result_file_info['user_id'] )
-    self.query = Query.create_or_update( result_file_info['query_id'], topic = self.topic, user = self.user )
     self.condition = Condition.create_or_update( result_file_info['condition'] )
     self.__create_or_update_session()
+    self.query = Query.create_or_update( result_file_info['query_id'], topic = self.topic, user = self.user, session = self.session )
     self.actions = self.__parse()
     self.topic.add_actions( self.actions )
     self.user.add_actions( self.actions )
     self.query.add_actions( self.actions )
     self.session.add_actions( self.actions )
+    self.session.add_query( self.query )
 
   def __parse( self ):
     actions = []

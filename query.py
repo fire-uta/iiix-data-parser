@@ -10,13 +10,14 @@ from filterable import Filterable
 
 
 class Query(DataRecord, HasActions, Filterable):
-  def __init__(self, query_id, topic = None, user = None, condition = None, autocomplete = None, query_text = None):
+  def __init__(self, query_id, topic = None, user = None, condition = None, autocomplete = None, query_text = None, session = None):
     DataRecord.__init__( self, uint16(query_id) )
     self.topic = topic
     self.user = user
     self.condition = condition
     self.autocomplete = bool_(autocomplete)
     self.query_text = query_text
+    self.session = session
     self.result_list = QueryResultList(self)
 
   def add_to_result_list( self, rank, document ):
