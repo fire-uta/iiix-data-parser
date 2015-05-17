@@ -98,6 +98,7 @@ def print_stats_for_filter(fil):
   print "Non-relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_non_relevant_documents(fil), Session.amount_of_viewed_non_relevant_documents(fil))
   print "Average document reading time: %s sec" % Session.global_average_document_reading_time_in_seconds( fil )
   print "Average query formulation time: %s sec" % Query.average_formulation_time_in_seconds( fil )
+  print "Average snippet scanning time: %s sec" % Session.global_average_snippet_scanning_time_in_seconds( fil )
 
 
 print "--- ALL SESSIONS (NO PRACTICE) ---"
@@ -105,6 +106,12 @@ print_stats_for_filter( Filterable.practice_topic_reject_filter )
 
 print "--- NON-DELAYED SESSIONS (NO PRACTICE) ---"
 print_stats_for_filter( Filterable.combine_filters( Filterable.no_delays_filter, Filterable.practice_topic_reject_filter ) )
+
+print "--- NON-DELAYED SESSIONS (TOPIC 435) ---"
+print_stats_for_filter( Filterable.combine_filters( Filterable.no_delays_filter, Filterable.practice_topic_reject_filter, Filterable.topic_filter(435) ) )
+
+print "--- NON-DELAYED SESSIONS (TOPIC 347) ---"
+print_stats_for_filter( Filterable.combine_filters( Filterable.no_delays_filter, Filterable.practice_topic_reject_filter, Filterable.topic_filter(347) ) )
 
 print "--- QUERY DELAY SESSIONS (NO PRACTICE) ---"
 print_stats_for_filter( Filterable.combine_filters( Filterable.query_delay_filter, Filterable.practice_topic_reject_filter ) )
