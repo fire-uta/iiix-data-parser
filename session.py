@@ -59,6 +59,15 @@ class Session(DataRecord, HasActions, Filterable):
     delta = last_timestamp - first_timestamp
     return delta.total_seconds()
 
+  def total_snippet_scanning_time_in_seconds(self):
+    return self.duration_in_seconds() - sum(self.query_formulation_times()) - sum(self.document_read_times().values())
+
+  def average_snippet_scanning_time_in_seconds(self):
+    return self.total_snippet_scanning_time_in_seconds()/len(self.seen_documents)
+
+  def query_formulation_times(self):
+    return [query.formulation_time_in_seconds() for query in self.queries.values()]
+
   def document_read_actions(self):
     return self.actions_by_type( 'DOC_MARKED_VIEWED' )
 
@@ -128,3 +137,10 @@ class Session(DataRecord, HasActions, Filterable):
     reading_times = [session.document_read_times().values() for session in sessions]
     merged_reading_times = list(itertools.chain.from_iterable( reading_times ))
     return sum(merged_reading_times)/len(merged_reading_times)
+
+  @classmethod
+  def global_average_snippet_scanning_time_in_seconds(cls, filter_func = Filterable.identity_filter):
+    sessions = filter( filter_func, cls.get_store().values() )
+    total_snippet_scanning_time = sum([session.total_snippet_scanning_time_in_seconds() for session in sessions])
+    total_seen_documents_amount = sum([len(session.seen_documents) for session in sessions])
+    return total_snippet_scanning_time/total_seen_documents_amount
