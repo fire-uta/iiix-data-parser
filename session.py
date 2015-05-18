@@ -53,6 +53,15 @@ class Session(DataRecord, HasActions, Filterable):
   def viewed_non_relevant_documents(self):
     return [document for document in self.viewed_documents.values() if not document.is_relevant_for_topic( self.topic )]
 
+  def marked_highly_relevant_documents(self):
+    return [document for document in self.marked_relevant_documents.values() if document.is_highly_relevant_for_topic( self.topic )]
+
+  def marked_moderately_relevant_documents(self):
+    return [document for document in self.marked_relevant_documents.values() if document.is_moderately_relevant_for_topic( self.topic )]
+
+  def marked_non_relevant_documents(self):
+    return [document for document in self.marked_relevant_documents.values() if not document.is_relevant_for_topic( self.topic )]
+
   def duration_in_seconds(self):
     first_timestamp = self.actions[0].timestamp
     last_timestamp = self.actions[-1].timestamp
@@ -105,6 +114,21 @@ class Session(DataRecord, HasActions, Filterable):
   def amount_of_viewed_highly_relevant_documents(cls, filter_func = Filterable.identity_filter):
     sessions = cls.get_store().values()
     return reduce( lambda acc, session: acc + len(session.viewed_highly_relevant_documents()), filter(filter_func, sessions), 0 )
+
+  @classmethod
+  def amount_of_marked_highly_relevant_documents(cls, filter_func = Filterable.identity_filter):
+    sessions = cls.get_store().values()
+    return reduce( lambda acc, session: acc + len(session.marked_highly_relevant_documents()), filter(filter_func, sessions), 0 )
+
+  @classmethod
+  def amount_of_marked_moderately_relevant_documents(cls, filter_func = Filterable.identity_filter):
+    sessions = cls.get_store().values()
+    return reduce( lambda acc, session: acc + len(session.marked_moderately_relevant_documents()), filter(filter_func, sessions), 0 )
+
+  @classmethod
+  def amount_of_marked_non_relevant_documents(cls, filter_func = Filterable.identity_filter):
+    sessions = cls.get_store().values()
+    return reduce( lambda acc, session: acc + len(session.marked_non_relevant_documents()), filter(filter_func, sessions), 0 )
 
   @classmethod
   def amount_of_seen_moderately_relevant_documents(cls, filter_func = Filterable.identity_filter):
