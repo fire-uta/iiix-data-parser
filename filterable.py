@@ -10,6 +10,10 @@ class Filterable:
   def topic_filter( topic_id ):
     return lambda filterable: filterable.topic.record_id == str( topic_id )
 
+  highly_relevant_filter = lambda filterable: filterable.document.is_highly_relevant_for_topic( filterable.topic )
+  moderately_relevant_filter = lambda filterable: filterable.document.is_moderately_relevant_for_topic( filterable.topic )
+  relevant_filter = lambda filterable: filterable.document.is_relevant_for_topic( filterable.topic )
+
   identity_filter = lambda filterable: True
 
   @staticmethod

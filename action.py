@@ -1,20 +1,8 @@
 from document import Document
+from filterable import Filterable
 
 
-class Action:
-
-  highly_relevant_filter = lambda action: action.document_is_highly_relevant()
-  moderately_relevant_filter = lambda action: action.document_is_moderately_relevant()
-  relevant_filter = lambda action: action.document_is_relevant()
-
-  no_delays_filter = lambda action: action.condition.record_id == str(6)
-  query_delay_filter = lambda action: action.condition.record_id == str(7)
-  document_delay_filter = lambda action: action.condition.record_id == str(8)
-  combined_delay_filter = lambda action: action.condition.record_id == str(9)
-
-  @staticmethod
-  def combine_filters( *filters ):
-    return lambda action: all([fil( action ) for fil in filters])
+class Action(Filterable):
 
   DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank' ]
   QUERY_EVENT_PARAMS = [ 'query_id', 'query_text' ]
@@ -56,6 +44,7 @@ class Action:
   def __init__(self, timestamp, condition, session, action_type, query, action_parameters):
     self.timestamp = timestamp
     self.session = session
+    self.topic = self.session.topic
     self.condition = condition
     self.action_type = action_type
     self.query = query
