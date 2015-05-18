@@ -93,9 +93,18 @@ queries_file = QueriesSummaryFile( get_queries_file_name() )
 
 
 def print_stats_for_filter(fil):
-  print "Highly relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_highly_relevant_documents( fil ), Session.amount_of_viewed_highly_relevant_documents( fil ))
-  print "Moderately relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_moderately_relevant_documents(fil), Session.amount_of_viewed_moderately_relevant_documents(fil))
-  print "Non-relevant docs seen across sessions: %i, of which viewed: %i" % (Session.amount_of_seen_non_relevant_documents(fil), Session.amount_of_viewed_non_relevant_documents(fil))
+  print "Highly relevant docs seen across sessions: %i, of which viewed: %i, of which marked relevant: %i" % (
+    Session.amount_of_seen_highly_relevant_documents( fil ),
+    Session.amount_of_viewed_highly_relevant_documents( fil ),
+    Session.amount_of_marked_highly_relevant_documents( fil ))
+  print "Moderately relevant docs seen across sessions: %i, of which viewed: %i, of which marked relevant: %i" % (
+    Session.amount_of_seen_moderately_relevant_documents(fil),
+    Session.amount_of_viewed_moderately_relevant_documents(fil),
+    Session.amount_of_marked_moderately_relevant_documents(fil))
+  print "Non-relevant docs seen across sessions: %i, of which viewed: %i, of which marked relevant: %i" % (
+    Session.amount_of_seen_non_relevant_documents(fil),
+    Session.amount_of_viewed_non_relevant_documents(fil),
+    Session.amount_of_marked_non_relevant_documents(fil))
   print "Average document reading time: %s sec" % Session.global_average_document_reading_time_in_seconds( fil )
   print "Average query formulation time: %s sec" % Query.average_formulation_time_in_seconds( fil )
   print "Average snippet scanning time: %s sec" % Session.global_average_snippet_scanning_time_in_seconds( fil )
