@@ -34,7 +34,19 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
     (idx, query_start_action) = self.actions_by_type( 'QUERY_FOCUS' )[0]
     return self.action_duration_in_seconds_for( idx, query_start_action, 'QUERY_ISSUED' )
 
+  def last_rank_reached(self):
+    for action in reversed(self.actions):
+      if hasattr( action, 'rank' ):
+        return int(action.rank)
+    # No actions with ranks. Likely bailed before reading anything. Counts as rank 1.
+    return 1
+
   @classmethod
   def average_formulation_time_in_seconds(cls, filter_func = lambda query: True):
     queries = filter( filter_func, cls.get_store().values() )
     return reduce( lambda acc, query: acc + query.formulation_time_in_seconds(), queries, 0 ) / len(queries)
+
+  @classmethod
+  def average_last_rank_reached(cls, filter_func = lambda query: True):
+    queries = filter( filter_func, cls.get_store().values() )
+    return reduce( lambda acc, query: acc + float(query.last_rank_reached()), queries, 0.0 ) / float(len(queries))
