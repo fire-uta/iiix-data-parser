@@ -102,3 +102,15 @@ class Action(Filterable):
 
   def document_is_relevant( self ):
     return self.document.is_relevant_for_topic( self.session.topic )
+
+  def gain( self ):
+    # Only doc-marked-relevant events can affect gain
+    if self.action_type != 'DOC_MARKED_RELEVANT':
+      return 0
+
+    if self.document_is_moderately_relevant():
+      return 1
+    elif self.document_is_highly_relevant():
+      return 10
+    else:
+      return 0
