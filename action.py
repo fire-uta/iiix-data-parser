@@ -70,17 +70,25 @@ class Action(Filterable):
 
   def __update_session( self ):
     if self.action_type == 'DOC_MARKED_VIEWED':
-      self.session.add_viewed_documents( self.document )
+      for doc_owner in self.__document_owners():
+        doc_owner.add_viewed_documents( self.document )
 
       # FIXME: THIS IS A HACK BECAUSE RANK CAN SOMETIMES BE UNKNOWN, AND IS MARKED WITH -1
       if int(self.rank) > 0:
         seen_results = self.query.results_up_to_rank( self.rank )
-        self.session.add_seen_documents( *[result.document for result in seen_results] )
+        seen_docs = [result.document for result in seen_results]
+        for doc_owner in self.__document_owners():
+          doc_owner.add_seen_documents( *seen_docs )
       else:
-        self.session.add_seen_documents( self.document )
+        for doc_owner in self.__document_owners():
+          doc_owner.add_seen_documents( self.document )
 
     elif self.action_type == 'DOC_MARKED_RELEVANT':
-      self.session.add_marked_relevant_documents( self.document )
+      for doc_owner in self.__document_owners():
+        doc_owner.add_marked_relevant_documents( self.document )
+
+  def __document_owners( self ):
+    return [ self.session, self.query ]
 
   def __update_global_stats( self ):
     if hasattr( self, 'rank' ) and int(self.rank) > Action.global_highest_rank:

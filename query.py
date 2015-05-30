@@ -7,11 +7,13 @@ from data_record import DataRecord
 from has_actions import HasActions
 from session import Session
 from filterable import Filterable
+from has_documents import HasDocuments
 
 
-class Query(DataRecord, HasActions, Filterable):
+class Query(DataRecord, HasActions, Filterable, HasDocuments):
   def __init__(self, query_id, topic = None, user = None, condition = None, autocomplete = None, query_text = None, session = None):
     DataRecord.__init__( self, uint16(query_id) )
+    HasDocuments.__init__( self )
     self.topic = topic
     self.user = user
     self.condition = condition
