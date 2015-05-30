@@ -3,21 +3,20 @@ from filterable import Filterable
 
 class HasDocuments:
 
+  def __init__(self):
+    self.seen_documents = {}
+    self.viewed_documents = {}
+    self.marked_relevant_documents = {}
+
   def add_seen_documents(self, *documents):
-    if not hasattr( self, 'seen_documents' ):
-      self.seen_documents = {}
     for document in documents:
       self.seen_documents[ document.record_id ] = document
 
   def add_viewed_documents( self, *documents ):
-    if not hasattr( self, 'viewed_documents' ):
-      self.viewed_documents = {}
     for document in documents:
       self.viewed_documents[ document.record_id ] = document
 
   def add_marked_relevant_documents( self, *documents ):
-    if not hasattr( self, 'marked_relevant_documents' ):
-      self.marked_relevant_documents = {}
     for document in documents:
       self.marked_relevant_documents[ document.record_id ] = document
 

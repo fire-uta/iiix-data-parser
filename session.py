@@ -11,6 +11,7 @@ class Session(DataRecord, HasActions, Filterable, HasDocuments):
 
   def __init__(self, session_id, user, topic, condition):
     DataRecord.__init__( self, session_id )
+    HasDocuments.__init__( self )
     self.topic = topic
     self.user = user
     self.condition = condition
