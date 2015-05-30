@@ -83,13 +83,13 @@ result_files = parse_result_files()
 log_files = parse_log_files()
 queries_file = QueriesSummaryFile( get_queries_file_name() )
 
-# print "Queries: %i" % len(Query.store)
-# print "Topics: %i: %s" % (len(Topic.store), Topic.store.keys())
-# print "Users: %i" % len(User.store)
-# print "Sessions: %i" % len(Session.store)
-# print "Documents: %i" % len(Document.store)
-# print "Conditions: %i: %s" % (len(Condition.store), Condition.store.keys())
-# print "Action types: %i: %s" % (len(Action.type_dict.keys()), Action.type_dict.keys())
+print "Queries: %i" % len(Query.store)
+print "Topics: %i: %s" % (len(Topic.store), Topic.store.keys())
+print "Users: %i" % len(User.store)
+print "Sessions: %i" % len(Session.store)
+print "Documents: %i" % len(Document.store)
+print "Conditions: %i: %s" % (len(Condition.store), Condition.store.keys())
+print "Action types: %i: %s" % (len(Action.type_dict.keys()), Action.type_dict.keys())
 
 
 def print_stats_for_filter(fil):
@@ -105,9 +105,22 @@ def print_stats_for_filter(fil):
     Session.amount_of_seen_non_relevant_documents(fil),
     Session.amount_of_viewed_non_relevant_documents(fil),
     Session.amount_of_marked_non_relevant_documents(fil))
+  print "Highly relevant docs seen across queries: %i, of which viewed: %i, of which marked relevant: %i" % (
+    Query.amount_of_seen_highly_relevant_documents( fil ),
+    Query.amount_of_viewed_highly_relevant_documents( fil ),
+    Query.amount_of_marked_highly_relevant_documents( fil ))
+  print "Moderately relevant docs seen across queries: %i, of which viewed: %i, of which marked relevant: %i" % (
+    Query.amount_of_seen_moderately_relevant_documents(fil),
+    Query.amount_of_viewed_moderately_relevant_documents(fil),
+    Query.amount_of_marked_moderately_relevant_documents(fil))
+  print "Non-relevant docs seen across queries: %i, of which viewed: %i, of which marked relevant: %i" % (
+    Query.amount_of_seen_non_relevant_documents(fil),
+    Query.amount_of_viewed_non_relevant_documents(fil),
+    Query.amount_of_marked_non_relevant_documents(fil))
   print "Average document reading time: %s sec" % Session.global_average_document_reading_time_in_seconds( fil )
   print "Average query formulation time: %s sec" % Query.average_formulation_time_in_seconds( fil )
   print "Average snippet scanning time: %s sec" % Session.global_average_snippet_scanning_time_in_seconds( fil )
+  print "Average query last rank reached: %s" % Query.average_last_rank_reached( fil )
 
 
 print "--- ALL SESSIONS (NO PRACTICE) ---"
