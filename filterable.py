@@ -19,3 +19,7 @@ class Filterable:
   @staticmethod
   def combine_filters( *filters ):
     return lambda filterable: all([fil( filterable ) for fil in filters])
+
+  @classmethod
+  def filtered_records(cls, filter_func):
+    return filter( filter_func, cls.get_store().values() )
