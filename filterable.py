@@ -10,9 +10,22 @@ class Filterable:
   def topic_filter( topic_id ):
     return lambda filterable: filterable.topic.record_id == str( topic_id )
 
+  @staticmethod
+  def user_reject_filter( *user_ids ):
+    return lambda filterable: filterable.user.record_id not in user_ids
+
+  @staticmethod
+  def user_filter( *user_ids ):
+    return lambda filterable: filterable.user.record_id in user_ids
+
   highly_relevant_filter = lambda filterable: filterable.document.is_highly_relevant_for_topic( filterable.topic )
   moderately_relevant_filter = lambda filterable: filterable.document.is_moderately_relevant_for_topic( filterable.topic )
   relevant_filter = lambda filterable: filterable.document.is_relevant_for_topic( filterable.topic )
+
+  @staticmethod
+  def precision_filter( rank, min_inclusive, max_exclusive = None ):
+    return lambda filterable: filterable.precision[ str( rank ) ] >= min_inclusive and (
+      max_exclusive is None or filterable.precision[ str( rank ) ] < max_exclusive )
 
   identity_filter = lambda filterable: True
 
