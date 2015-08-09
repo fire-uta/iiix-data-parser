@@ -11,7 +11,7 @@ from has_documents import HasDocuments
 
 
 class Query(DataRecord, HasActions, Filterable, HasDocuments):
-  def __init__(self, query_id, topic = None, user = None, condition = None, autocomplete = None, query_text = None, session = None):
+  def __init__(self, query_id, topic = None, user = None, condition = None, autocomplete = None, query_text = None, session = None, precision = None):
     DataRecord.__init__( self, uint16(query_id) )
     HasDocuments.__init__( self )
     self.topic = topic
@@ -20,6 +20,7 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
     self.autocomplete = bool_(autocomplete)
     self.query_text = query_text
     self.session = session
+    self.precision = precision
     self.result_list = QueryResultList(self)
 
   def add_to_result_list( self, rank, document ):

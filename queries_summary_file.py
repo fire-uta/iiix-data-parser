@@ -22,4 +22,13 @@ class QueriesSummaryFile(DataFile):
           user = User.create_or_update( row['userid'] )
           condition = Condition.create_or_update( row['condition'] )
           autocomplete = row['autocomplete_used'] == 1
-          query = Query.create_or_update( row['queryid'], topic = topic, user = user, condition = condition, autocomplete = autocomplete, query_text = row['terms'] )
+          query = Query.create_or_update( row['queryid'], topic = topic, user = user, condition = condition, autocomplete = autocomplete, query_text = row['terms'], precision = self.__build_precision_dict( row ) )
+
+  def __build_precision_dict( self, result_row ):
+    precisions = {}
+    def add_precision(rank):
+      precisions[ str( rank ) ] = float( result_row['p' + str(rank)] )
+    for rank in range(1,11) + [15,20]:
+      add_precision( rank )
+    precisions['map'] = float( result_row['map'] )
+    return precisions
