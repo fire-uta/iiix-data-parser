@@ -36,11 +36,21 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
     return self.action_duration_in_seconds_for( idx, query_start_action, 'QUERY_ISSUED' )
 
   def last_rank_reached(self):
+    current_rank_candidate = 1
     for action in reversed(self.actions):
-      if hasattr( action, 'rank' ):
-        return int(action.rank)
-    # No actions with ranks. Likely bailed before reading anything. Counts as rank 1.
-    return 1
+      if hasattr( action, 'rank' ) and int(action.rank) > current_rank_candidate:
+        current_rank_candidate = int(action.rank)
+    # Note that this may also return one if there were no actions with a rank.
+    # That means the user bailed without doing anything, so it counts as rank 1.
+    return current_rank_candidate
+
+  def amount_of_non_relevant_documents_seen_at_last_rank(self):
+    return len(self.non_relevant_documents_seen_at_last_rank())
+
+  def non_relevant_documents_seen_at_last_rank(self):
+    last_rank = self.last_rank_reached()
+    results_seen = self.results_up_to_rank( last_rank )
+    return [result.document for result in results_seen if result.is_not_relevant_for_topic( self.topic )]
 
   @classmethod
   def average_formulation_time_in_seconds(cls, filter_func = lambda query: True):
@@ -51,3 +61,8 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
   def average_last_rank_reached(cls, filter_func = lambda query: True):
     queries = filter( filter_func, cls.get_store().values() )
     return reduce( lambda acc, query: acc + float(query.last_rank_reached()), queries, 0.0 ) / float(len(queries))
+
+  @classmethod
+  def average_amount_of_non_relevant_documents_seen_at_last_rank(cls, filter_func = lambda query: True):
+    queries = filter( filter_func, cls.get_store().values() )
+    return reduce( lambda acc, query: acc + float(query.amount_of_non_relevant_documents_seen_at_last_rank()), queries, 0.0 ) / float(len(queries))
