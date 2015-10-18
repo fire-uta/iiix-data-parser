@@ -52,6 +52,20 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
     results_seen = self.results_up_to_rank( last_rank )
     return [result.document for result in results_seen if result.is_not_relevant_for_topic( self.topic )]
 
+  def amount_of_contiguous_non_relevant_documents_seen_at_last_rank(self):
+    return len(self.last_contiguous_non_relevant_documents_seen())
+
+  def last_contiguous_non_relevant_documents_seen(self):
+    last_rank = self.last_rank_reached()
+    results_seen = self.results_up_to_rank( last_rank )
+    contiguous_non_relevants = []
+    for result in reversed(results_seen):
+      if result.is_not_relevant_for_topic( self.topic ):
+        contiguous_non_relevants.append( result.document )
+      else:
+        break
+    return contiguous_non_relevants
+
   @classmethod
   def average_formulation_time_in_seconds(cls, filter_func = lambda query: True):
     queries = filter( filter_func, cls.get_store().values() )
@@ -66,3 +80,8 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
   def average_amount_of_non_relevant_documents_seen_at_last_rank(cls, filter_func = lambda query: True):
     queries = filter( filter_func, cls.get_store().values() )
     return reduce( lambda acc, query: acc + float(query.amount_of_non_relevant_documents_seen_at_last_rank()), queries, 0.0 ) / float(len(queries))
+
+  @classmethod
+  def average_amount_of_contiguous_non_relevant_documents_seen_at_last_rank(cls, filter_func = lambda query: True):
+    queries = filter( filter_func, cls.get_store().values() )
+    return reduce( lambda acc, query: acc + float(query.amount_of_contiguous_non_relevant_documents_seen_at_last_rank()), queries, 0.0 ) / float(len(queries))
