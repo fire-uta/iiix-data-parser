@@ -109,7 +109,7 @@ class Action(Filterable):
       return 0
 
     if self.document_is_moderately_relevant():
-      return 1
+      return 10
     elif self.document_is_highly_relevant():
       return 10
     else:
