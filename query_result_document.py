@@ -6,3 +6,9 @@ class QueryResultDocument:
     self.result_list = result_list
     self.rank = uint16(rank)
     self.document = document
+
+  def is_relevant_for_topic(self, topic):
+    return self.document.is_relevant_for_topic(topic)
+
+  def is_not_relevant_for_topic(self, topic):
+    return self.document.is_not_relevant_for_topic(topic)
