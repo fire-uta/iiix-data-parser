@@ -24,6 +24,9 @@ class Document(DataRecord):
   def is_relevant_for_topic(self, topic):
     return self.is_relevant_for_topic_id( topic.record_id )
 
+  def is_not_relevant_for_topic(self, topic):
+    return not self.is_relevant_for_topic( topic )
+
   def is_relevant_for_topic_id(self, topic_id):
     return self.get_relevance_for_topic_id( topic_id ).is_relevant()
 
