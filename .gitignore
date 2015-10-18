@@ -1,2 +1,7 @@
 *.pyc
 data
+*.txt
+*.txt~
+*.ods
+*.xlsx
+*.csv
