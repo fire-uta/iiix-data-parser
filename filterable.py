@@ -15,6 +15,11 @@ class Filterable:
     return lambda filterable: filterable.user.record_id not in user_ids
 
   @staticmethod
+  def condition_filter( *condition_ids ):
+    condition_ids = [str(condition_id) for condition_id in condition_ids]
+    return lambda filterable: filterable.condition.record_id in condition_ids
+
+  @staticmethod
   def user_filter( *user_ids ):
     return lambda filterable: filterable.user.record_id in user_ids
 
