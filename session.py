@@ -70,17 +70,17 @@ class Session(DataRecord, HasActions, Filterable, HasDocuments):
     querying_durations = [self.action_duration_in_seconds_for( idx, action, 'QUERY_ISSUED' ) for idx, action in query_start_actions]
     return sum(querying_durations) / len(querying_durations)
 
-  def cumulated_gain_at( self, seconds_elapsed ):
+  def cumulated_gain_at( self, seconds_elapsed, gain_levels ):
     cumulated_gain = 0
-    for (seconds_at, gain_increment) in self.gain_events():
+    for (seconds_at, gain_increment) in self.gain_events( gain_levels ):
       if seconds_at > seconds_elapsed:
         return cumulated_gain
       cumulated_gain += gain_increment
     return cumulated_gain
 
-  def gain_events(self):
+  def gain_events(self, gain_levels):
     return _memoize_attr( self, '_gain_events',
-      [(self.seconds_elapsed_at(action.timestamp), action.gain()) for (idx,action) in self.document_marked_relevant_actions() if action.gain() > 0]
+      [(self.seconds_elapsed_at(action.timestamp), action.gain(gain_levels)) for (idx,action) in self.document_marked_relevant_actions() if action.gain(gain_levels) > 0]
     )
 
   def seconds_elapsed_at(self, timestamp):
@@ -110,6 +110,6 @@ class Session(DataRecord, HasActions, Filterable, HasDocuments):
     return total_snippet_scanning_time/total_seen_documents_amount
 
   @classmethod
-  def average_cumulated_gain_at(cls, seconds_elapsed, filter_func = Filterable.identity_filter):
+  def average_cumulated_gain_at(cls, seconds_elapsed, gain_levels, filter_func = Filterable.identity_filter):
     sessions = filter( filter_func, cls.get_store().values() )
-    return reduce( lambda acc, session: acc + float(session.cumulated_gain_at( seconds_elapsed )), sessions, 0.0 ) / float(len(sessions))
+    return reduce( lambda acc, session: acc + float(session.cumulated_gain_at( seconds_elapsed, gain_levels )), sessions, 0.0 ) / float(len(sessions))

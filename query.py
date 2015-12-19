@@ -12,7 +12,7 @@ from has_documents import HasDocuments
 
 class Query(DataRecord, HasActions, Filterable, HasDocuments):
   def __init__(self, query_id, topic = None, user = None, condition = None, autocomplete = None, query_text = None, session = None, precision = None):
-    DataRecord.__init__( self, uint16(query_id) )
+    DataRecord.__init__( self, str(query_id) )
     HasDocuments.__init__( self )
     self.topic = topic
     self.user = user
@@ -28,7 +28,7 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
 
   def results_up_to_rank( self, rank ):
     if int(rank) < 1 or int(rank) > self.result_list.length():
-        raise RuntimeError("Attempted to fetch results up to rank %s for query %s, which is impossible." % (rank, self.record_id))
+        raise RuntimeError("Attempted to fetch results up to rank %s for query %s (%s), which is impossible." % (rank, self.record_id, self.query_text))
     return self.result_list.results_up_to_rank( rank )
 
   def formulation_time_in_seconds(self):

@@ -7,6 +7,10 @@ class DataRecord:
     return cls.store
 
   @classmethod
+  def all( cls ):
+    return cls.get_store().values()
+
+  @classmethod
   def find( cls, record_id ):
     return cls.get_store().get( str(record_id), None )
 

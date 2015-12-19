@@ -19,9 +19,12 @@ class ResultFile(DataFile):
     self.__parse()
 
   def __parse( self ):
-    with open( self.file_name, 'rb' ) as result_file:
-      result_reader = csv.DictReader( result_file, delimiter=',')
-      for row in result_reader:
-          document = Document.create_or_update( row['docid'] )
-          self.query.add_to_result_list( row['rank'], document )
-          self.topic.add_relevance( document, row['trec_judgement'] )
+    try:
+      with open( self.file_name, 'rb' ) as result_file:
+        result_reader = csv.DictReader( result_file, delimiter=',')
+        for row in result_reader:
+            document = Document.create_or_update( row['docid'] )
+            self.query.add_to_result_list( row['rank'], document )
+            self.topic.add_relevance( document, row['trec_judgement'] )
+    except ValueError as e:
+      raise RuntimeError( "File %s contains invalid data: %s" % ( self.file_name, e ) )

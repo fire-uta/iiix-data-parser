@@ -1,11 +1,21 @@
 from document import Document
 from filterable import Filterable
+from cli import CLI
 
+def get_cli_options():
+  (options, args) = CLI.parsedArgs
+  return options
+
+
+def should_use_alt_params():
+  return get_cli_options().use_alt_log_format
 
 class Action(Filterable):
 
   DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank' ]
+  ALT_DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'user_relevance_score', 'rank' ]
   QUERY_EVENT_PARAMS = [ 'query_id', 'query_text' ]
+  ALT_QUERY_EVENT_PARAMS = [ 'query_text' ]
 
   PARAMS = {
     'QUERY_ISSUED': QUERY_EVENT_PARAMS,
@@ -21,6 +31,35 @@ class Action(Filterable):
     'EXPERIMENT_TIMEOUT': [],
     'SEARCH_TASK_COMPLETED': []
   }
+
+  ALT_PARAMS = PARAMS.copy()
+  ALT_PARAMS.update( {
+    'DOC_MARKED_VIEWED': ALT_DOCUMENT_EVENT_PARAMS,
+    'DEMOGRAPHICS_SURVEY_STARTED': [],
+    'DEMOGRAPHICS_SURVEY_COMPLETED': [],
+    'SELF_SEARCH_EFFICACY_SURVEY_STARTED': [],
+    'SELF_SEARCH_EFFICACY_SURVEY_COMPLETED': [],
+    'PRE_TASK_SURVEY_COMPLETED': [],
+    'SEARCH_TASK_COMMENCED': [],
+    'VIEW_SEARCH_BOX': [],
+    'SEARCH_TASK_VIEWED': [],
+    'VIEW_SAVED_DOCS': [],
+    'POST_TASK_SURVEY_COMPLETED': [],
+    'NASA_LOAD_SURVEY_STARTED': [],
+    'NASA_LOAD_SURVEY_COMPLETED': [],
+    'NASA_QUERY_LOAD_SURVEY_STARTED': [],
+    'NASA_QUERY_LOAD_SURVEY_COMPLETED': [],
+    'NASA_NAVIGATION_LOAD_SURVEY_STARTED': [],
+    'NASA_NAVIGATION_LOAD_SURVEY_COMPLETED': [],
+    'NASA_ASSESSMENT_LOAD_SURVEY_STARTED': [],
+    'NASA_ASSESSMENT_LOAD_SURVEY_COMPLETED': [],
+    'NASA_COMPARE_FACTORS_SURVEY_STARTED': [],
+    'NASA_COMPARE_FACTORS_SURVEY_COMPLETED': [],
+    'PERFORMANCE': [],
+    'DOC_MARKED_NONRELEVANT': DOCUMENT_EVENT_PARAMS,
+    'QUERY_SUGGESTION_ISSUED': ALT_QUERY_EVENT_PARAMS,
+    'QUERY_ISSUED': ALT_QUERY_EVENT_PARAMS
+  } )
 
   type_dict = {}
 
@@ -56,7 +95,13 @@ class Action(Filterable):
 
   def __parse_action_parameters(self):
     params_list = str(self.bare_action_parameters).split(' ')
-    params_order = Action.PARAMS[ self.action_type ]
+
+    params_order = []
+    if should_use_alt_params():
+      params_order = Action.ALT_PARAMS[ self.action_type ]
+    else:
+      params_order = Action.PARAMS[ self.action_type ]
+
     for param_name, param_value in zip(params_order, params_list):
       setattr(self, param_name, param_value)
     self.__init_action_parameter_objects()
@@ -75,10 +120,13 @@ class Action(Filterable):
 
       # FIXME: THIS IS A HACK BECAUSE RANK CAN SOMETIMES BE UNKNOWN, AND IS MARKED WITH -1
       if int(self.rank) > 0:
-        seen_results = self.query.results_up_to_rank( self.rank )
-        seen_docs = [result.document for result in seen_results]
-        for doc_owner in self.__document_owners():
-          doc_owner.add_seen_documents( *seen_docs )
+        try:
+          seen_results = self.query.results_up_to_rank( self.rank )
+          seen_docs = [result.document for result in seen_results]
+          for doc_owner in self.__document_owners():
+            doc_owner.add_seen_documents( *seen_docs )
+        except RuntimeError as e:
+          raise RuntimeError( "Action at %s caused error: %s" % ( self.timestamp, e ) )
       else:
         for doc_owner in self.__document_owners():
           doc_owner.add_seen_documents( self.document )
@@ -103,14 +151,14 @@ class Action(Filterable):
   def document_is_relevant( self ):
     return self.document.is_relevant_for_topic( self.session.topic )
 
-  def gain( self ):
+  def gain( self, gain_levels ):
     # Only doc-marked-relevant events can affect gain
     if self.action_type != 'DOC_MARKED_RELEVANT':
       return 0
 
     if self.document_is_moderately_relevant():
-      return 10
+      return int(gain_levels[1])
     elif self.document_is_highly_relevant():
-      return 10
+      return int(gain_levels[2])
     else:
-      return 0
+      return int(gain_levels[0])
