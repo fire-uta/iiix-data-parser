@@ -43,4 +43,7 @@ class Document(DataRecord):
     return self.is_moderately_relevant_for_topic_id( topic.record_id )
 
   def is_moderately_relevant_for_topic_id(self, topic_id):
-    return self.get_relevance_for_topic_id( topic_id ).is_moderately_relevant()
+    try:
+      return self.get_relevance_for_topic_id( topic_id ).is_moderately_relevant()
+    except AttributeError:
+      raise RuntimeError("No relevance info found for doc id %s, topic id %s, available rels: %s" % (self.record_id, topic_id, repr(self.relevances)))

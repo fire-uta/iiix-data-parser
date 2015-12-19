@@ -23,8 +23,8 @@ class ResultFile(DataFile):
       with open( self.file_name, 'rb' ) as result_file:
         result_reader = csv.DictReader( result_file, delimiter=',')
         for row in result_reader:
-            document = Document.create_or_update( row['docid'] )
-            self.query.add_to_result_list( row['rank'], document )
-            self.topic.add_relevance( document, row['trec_judgement'] )
+            document = Document.create_or_update( row['docid'].strip() )
+            self.query.add_to_result_list( row['rank'].strip(), document )
+            self.topic.add_relevance( document, row['trec_judgement'].strip() )
     except ValueError as e:
       raise RuntimeError( "File %s contains invalid data: %s" % ( self.file_name, e ) )

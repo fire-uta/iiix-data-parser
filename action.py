@@ -156,9 +156,12 @@ class Action(Filterable):
     if self.action_type != 'DOC_MARKED_RELEVANT':
       return 0
 
-    if self.document_is_moderately_relevant():
-      return int(gain_levels[1])
-    elif self.document_is_highly_relevant():
-      return int(gain_levels[2])
-    else:
-      return int(gain_levels[0])
+    try:
+      if self.document_is_moderately_relevant():
+        return int(gain_levels[1])
+      elif self.document_is_highly_relevant():
+        return int(gain_levels[2])
+      else:
+        return int(gain_levels[0])
+    except RuntimeError as e:
+      raise RuntimeError("No gain could be inferred for doc-marked-relevant event at %s, query id %s: %s" % (self.timestamp, self.query.record_id, e))

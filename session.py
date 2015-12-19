@@ -71,12 +71,15 @@ class Session(DataRecord, HasActions, Filterable, HasDocuments):
     return sum(querying_durations) / len(querying_durations)
 
   def cumulated_gain_at( self, seconds_elapsed, gain_levels ):
-    cumulated_gain = 0
-    for (seconds_at, gain_increment) in self.gain_events( gain_levels ):
-      if seconds_at > seconds_elapsed:
-        return cumulated_gain
-      cumulated_gain += gain_increment
-    return cumulated_gain
+    try:
+      cumulated_gain = 0
+      for (seconds_at, gain_increment) in self.gain_events( gain_levels ):
+        if seconds_at > seconds_elapsed:
+          return cumulated_gain
+        cumulated_gain += gain_increment
+      return cumulated_gain
+    except RuntimeError as e:
+      raise RuntimeError("Cannot calculate cumulated gain at %s secs for session id %s: %s" % (seconds_elapsed, self.record_id, e))
 
   def gain_events(self, gain_levels):
     return _memoize_attr( self, '_gain_events',
