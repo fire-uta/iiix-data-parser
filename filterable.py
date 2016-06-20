@@ -40,4 +40,4 @@ class Filterable:
 
   @classmethod
   def filtered_records(cls, filter_func):
-    return filter( filter_func, cls.get_store().values() )
+    return list(filter( filter_func, cls.get_store().values() ))

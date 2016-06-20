@@ -20,7 +20,7 @@ class ResultFile(DataFile):
 
   def __parse( self ):
     try:
-      with open( self.file_name, 'rb' ) as result_file:
+      with open( self.file_name, 'r' ) as result_file:
         result_reader = csv.DictReader( result_file, delimiter=',')
         for row in result_reader:
             document = Document.create_or_update( row['docid'].strip() )

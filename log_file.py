@@ -40,7 +40,7 @@ class LogFile(DataFile):
 
   def __parse( self ):
     actions = []
-    with open( self.file_name, 'rb' ) as log_file:
+    with open( self.file_name, 'r' ) as log_file:
       for line in log_file:
           parsed_line = _parse_line( line )
           condition = self.condition

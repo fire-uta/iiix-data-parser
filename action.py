@@ -1,6 +1,8 @@
+from data_record import DataRecord
 from document import Document
 from filterable import Filterable
 from cli import CLI
+
 
 def get_cli_options():
   (options, args) = CLI.parsedArgs
@@ -10,7 +12,8 @@ def get_cli_options():
 def should_use_alt_params():
   return get_cli_options().use_alt_log_format
 
-class Action(Filterable):
+
+class Action(DataRecord, Filterable):
 
   DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank' ]
   ALT_DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'user_relevance_score', 'rank' ]
@@ -61,6 +64,8 @@ class Action(Filterable):
     'QUERY_ISSUED': ALT_QUERY_EVENT_PARAMS
   } )
 
+  CSV_EXPORT_FIELDS = ['record_id', 'timestamp', 'session', 'topic', 'condition', 'action_type', 'query', 'result_page', 'document', 'rank', 'user_relevance_score']
+
   type_dict = {}
 
   global_highest_rank = 0
@@ -78,9 +83,10 @@ class Action(Filterable):
   @classmethod
   def filter_by_type( cls, type, filter_func ):
     actions_by_type = cls.by_type( type )
-    return filter( filter_func, actions_by_type )
+    return list(filter( filter_func, actions_by_type ))
 
   def __init__(self, timestamp, condition, session, action_type, query, action_parameters):
+    DataRecord.__init__(self, session.record_id + '-' + str(timestamp))
     self.timestamp = timestamp
     self.session = session
     self.topic = self.session.topic
@@ -134,6 +140,25 @@ class Action(Filterable):
     elif self.action_type == 'DOC_MARKED_RELEVANT':
       for doc_owner in self.__document_owners():
         doc_owner.add_marked_relevant_documents( self.document )
+
+  def marked_relevant_documents(self):
+    if self.action_type == 'DOC_MARKED_RELEVANT':
+      return [self.document]
+    return []
+
+  def viewed_documents(self):
+    if self.action_type == 'DOC_MARKED_VIEWED':
+      return [self.document]
+    return []
+
+  def seen_documents_since(self, rank):
+    if self.action_type == 'DOC_MARKED_VIEWED':
+      if int(self.rank) > 0:
+        seen_results = self.query.results_between(rank, self.rank)
+        return [result.document for result in seen_results]
+      else:
+        return [self.document]
+    return []
 
   def __document_owners( self ):
     return [ self.session, self.query ]

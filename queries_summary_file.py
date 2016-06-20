@@ -15,7 +15,7 @@ class QueriesSummaryFile(DataFile):
     self.__parse()
 
   def __parse( self ):
-    with open( self.file_name, 'rb' ) as result_file:
+    with open( self.file_name, 'r' ) as result_file:
       result_reader = csv.DictReader( result_file, delimiter=',')
       for row in result_reader:
           topic = Topic.create_or_update( row['topic'] )
@@ -28,7 +28,7 @@ class QueriesSummaryFile(DataFile):
     precisions = {}
     def add_precision(rank):
       precisions[ str( rank ) ] = float( result_row['p' + str(rank)] )
-    for rank in range(1,11) + [15,20]:
+    for rank in list(range(1,11)) + [15,20]:
       add_precision( rank )
     precisions['map'] = float( result_row['map'] )
     return precisions

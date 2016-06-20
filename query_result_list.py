@@ -12,5 +12,8 @@ class QueryResultList:
   def results_up_to_rank( self, rank ):
     return self.result_documents[:int(rank)]
 
+  def results_between(self, rank_start, rank_end):
+    return self.result_documents[(int(rank_start) - 1):int(rank_end)]
+
   def length( self ):
     return len( self.result_documents )

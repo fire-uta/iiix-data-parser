@@ -1,3 +1,6 @@
+from functools import reduce
+
+
 from numpy import uint16
 from numpy import bool_
 
@@ -30,6 +33,12 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
     if int(rank) < 1 or int(rank) > self.result_list.length():
         raise RuntimeError("Attempted to fetch results up to rank %s for query %s (%s), which is impossible." % (rank, self.record_id, self.query_text))
     return self.result_list.results_up_to_rank( rank )
+
+  def results_between(self, rank_start, rank_end):
+    result_length = self.result_list.length()
+    if int(rank_start) < 1 or int(rank_start) > result_length or int(rank_end) < 1 or int(rank_end) > result_length or int(rank_start) > int(rank_end):
+        raise RuntimeError("Attempted to fetch results between rank %s and %s for query %s (%s), which is impossible." % (rank_start, rank_end, self.record_id, self.query_text))
+    return self.result_list.results_between(rank_start, rank_end)
 
   def formulation_time_in_seconds(self):
     (idx, query_start_action) = self.actions_by_type( 'QUERY_FOCUS' )[0]
@@ -68,20 +77,20 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
 
   @classmethod
   def average_formulation_time_in_seconds(cls, filter_func = lambda query: True):
-    queries = filter( filter_func, cls.get_store().values() )
+    queries = list(filter( filter_func, cls.get_store().values() ))
     return reduce( lambda acc, query: acc + query.formulation_time_in_seconds(), queries, 0 ) / len(queries)
 
   @classmethod
   def average_last_rank_reached(cls, filter_func = lambda query: True):
-    queries = filter( filter_func, cls.get_store().values() )
+    queries = list(filter( filter_func, cls.get_store().values() ))
     return reduce( lambda acc, query: acc + float(query.last_rank_reached()), queries, 0.0 ) / float(len(queries))
 
   @classmethod
   def average_amount_of_non_relevant_documents_seen_at_last_rank(cls, filter_func = lambda query: True):
-    queries = filter( filter_func, cls.get_store().values() )
+    queries = list(filter( filter_func, cls.get_store().values() ))
     return reduce( lambda acc, query: acc + float(query.amount_of_non_relevant_documents_seen_at_last_rank()), queries, 0.0 ) / float(len(queries))
 
   @classmethod
   def average_amount_of_contiguous_non_relevant_documents_seen_at_last_rank(cls, filter_func = lambda query: True):
-    queries = filter( filter_func, cls.get_store().values() )
+    queries = list(filter( filter_func, cls.get_store().values() ))
     return reduce( lambda acc, query: acc + float(query.amount_of_contiguous_non_relevant_documents_seen_at_last_rank()), queries, 0.0 ) / float(len(queries))

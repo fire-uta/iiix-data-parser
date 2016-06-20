@@ -1,8 +1,11 @@
+from data_record import DataRecord
+
 from numpy import uint8
 
 
-class Relevance:
+class Relevance(DataRecord):
   def __init__(self, topic, document, relevance_level):
+    DataRecord.__init__(self, topic.record_id + '-' + document.record_id)
     self.topic = topic
     self.document = document
     self.relevance_level = uint8(relevance_level)

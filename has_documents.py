@@ -1,4 +1,6 @@
 from filterable import Filterable
+from functools import reduce
+import numpy
 
 
 class HasDocuments:
@@ -47,47 +49,83 @@ class HasDocuments:
   def marked_non_relevant_documents(self):
     return [document for document in self.marked_relevant_documents.values() if not document.is_relevant_for_topic( self.topic )]
 
-  @classmethod
-  def amount_of_seen_highly_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.seen_highly_relevant_documents()), filter(filter_func, sessions), 0 )
+  def random_click_probability(self):
+    if len(self.seen_documents) == 0:
+      return 0
+    return len(self.viewed_documents) / len(self.seen_documents)
+
+  def amount_of_seen_documents(self):
+    return len(self.seen_documents)
 
   @classmethod
-  def amount_of_viewed_highly_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.viewed_highly_relevant_documents()), filter(filter_func, sessions), 0 )
+  def amount_of_seen_highly_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.seen_highly_relevant_documents()), list(filter(filter_func, instances)), 0)
 
   @classmethod
-  def amount_of_marked_highly_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.marked_highly_relevant_documents()), filter(filter_func, sessions), 0 )
+  def amount_of_seen_highly_relevant_documents_std(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return numpy.std([len(instance.seen_highly_relevant_documents()) for instance in list(filter(filter_func, instances))])
 
   @classmethod
-  def amount_of_marked_moderately_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.marked_moderately_relevant_documents()), filter(filter_func, sessions), 0 )
+  def amount_of_viewed_highly_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.viewed_highly_relevant_documents()), list(filter(filter_func, instances)), 0)
 
   @classmethod
-  def amount_of_marked_non_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.marked_non_relevant_documents()), filter(filter_func, sessions), 0 )
+  def amount_of_marked_highly_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.marked_highly_relevant_documents()), list(filter(filter_func, instances)), 0)
 
   @classmethod
-  def amount_of_seen_moderately_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.seen_moderately_relevant_documents()), filter(filter_func, sessions), 0 )
+  def amount_of_marked_moderately_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.marked_moderately_relevant_documents()), list(filter(filter_func, instances)), 0)
 
   @classmethod
-  def amount_of_viewed_moderately_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.viewed_moderately_relevant_documents()), filter(filter_func, sessions), 0 )
+  def amount_of_marked_non_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.marked_non_relevant_documents()), list(filter(filter_func, instances)), 0)
 
   @classmethod
-  def amount_of_seen_non_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.seen_non_relevant_documents()), filter(filter_func, sessions), 0 )
+  def amount_of_seen_moderately_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.seen_moderately_relevant_documents()), list(filter(filter_func, instances)), 0)
 
   @classmethod
-  def amount_of_viewed_non_relevant_documents(cls, filter_func = Filterable.identity_filter):
-    sessions = cls.get_store().values()
-    return reduce( lambda acc, session: acc + len(session.viewed_non_relevant_documents()), filter(filter_func, sessions), 0 )
+  def amount_of_viewed_moderately_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.viewed_moderately_relevant_documents()), list(filter(filter_func, instances)), 0)
+
+  @classmethod
+  def amount_of_seen_non_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.seen_non_relevant_documents()), list(filter(filter_func, instances)), 0)
+
+  @classmethod
+  def amount_of_viewed_non_relevant_documents(cls, filter_func=Filterable.identity_filter, instances=None):
+    if instances is None:
+      instances = cls.get_store().values()
+    return reduce(lambda acc, instance: acc + len(instance.viewed_non_relevant_documents()), list(filter(filter_func, instances)), 0)
+
+  @classmethod
+  def average_random_click_probability(cls, filter_func=Filterable.identity_filter, records=None):
+    if records is None:
+      records = cls.all_with(filter_func)
+    return numpy.mean([record.random_click_probability() for record in records])
+
+  @classmethod
+  def ratio_of_seen_documents_at_rank(cls, rank, filter_func=Filterable.identity_filter, records=None):
+    if records is None:
+      records = cls.all_with(filter_func)
+    records_with_enough_seen_docs = list(filter(lambda record: record.amount_of_seen_documents() >= rank, records))
+    return float(len(records_with_enough_seen_docs)) / float(len(records))
