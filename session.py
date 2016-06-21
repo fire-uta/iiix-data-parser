@@ -36,9 +36,7 @@ class Session(DataRecord, Filterable, ActsAsSession):
   @classmethod
   def global_average_snippet_scanning_time_in_seconds(cls, filter_func=Filterable.identity_filter):
     sessions = list(filter(filter_func, cls.get_store().values()))
-    total_snippet_scanning_time = sum([session.total_snippet_scanning_time_in_seconds() for session in sessions])
-    total_seen_documents_amount = sum([len(session.seen_documents) for session in sessions])
-    return total_snippet_scanning_time / total_seen_documents_amount
+    return cls.average_snippet_scanning_time_in_seconds_over(sessions)
 
   @classmethod
   def average_cumulated_gain_at(cls, seconds_elapsed, gain_levels, filter_func=Filterable.identity_filter):

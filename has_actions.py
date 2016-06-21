@@ -30,15 +30,24 @@ class HasActions:
     return delta.total_seconds()
 
   def duration_in_seconds(self):
+    # No actions? No duration.
+    if len(self.actions) == 0:
+      return None
     first_timestamp = self.get_start_timestamp()
-    last_timestamp = self.actions[-1].timestamp
+    last_timestamp = self.get_end_timestamp()
     delta = last_timestamp - first_timestamp
     return delta.total_seconds()
 
   def get_start_timestamp(self):
+    # No actions?
+    if len(self.actions) == 0:
+      return None
     return self.actions[0].timestamp
 
   def get_end_timestamp(self):
+    # No actions?
+    if len(self.actions) == 0:
+      return None
     return self.actions[-1].timestamp
 
   def document_read_actions(self):
