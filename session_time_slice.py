@@ -4,7 +4,7 @@ from acts_as_session import ActsAsSession
 
 
 class SessionTimeSlice(ActsAsSession):
-  def __init__(self, session, start_msecs, length_msecs):
+  def __init__(self, session, start_msecs, length_msecs, preceding_slice=None):
     ActsAsSession.__init__(self, session.user, session.topic, session.condition)
     self.session = session
     self.start_msecs = start_msecs
@@ -12,10 +12,47 @@ class SessionTimeSlice(ActsAsSession):
     self.session_start_at = self.session.get_start_timestamp()
     self.slice_start_at = self.session_start_at + timedelta(milliseconds=self.start_msecs)
     self.slice_stop_at = self.slice_start_at + timedelta(milliseconds=self.length_msecs)
+    self.preceding_slice = preceding_slice
 
     self._resolve_actions()
     self._resolve_queries()
     self._resolve_documents()
+
+  def has_been_viewed_in_preceding_slices(self, document):
+    if self.preceding_slice is None:
+      return False
+    if self.preceding_slice.has_been_viewed(document):
+      return True
+    return self.preceding_slice.has_been_viewed_in_preceding_slices(document)
+
+  def has_been_seen_in_preceding_slices(self, document):
+    if self.preceding_slice is None:
+      return False
+    if self.preceding_slice.has_been_seen(document):
+      return True
+    return self.preceding_slice.has_been_seen_in_preceding_slices(document)
+
+  def has_been_marked_in_preceding_slices(self, document):
+    if self.preceding_slice is None:
+      return False
+    if self.preceding_slice.has_been_marked(document):
+      return True
+    return self.preceding_slice.has_been_marked_in_preceding_slices(document)
+
+  def add_viewed_documents(self, *documents):
+    for document in documents:
+      if not self.has_been_viewed_in_preceding_slices(document):
+        super().add_viewed_documents(document)
+
+  def add_seen_documents(self, *documents):
+    for document in documents:
+      if not self.has_been_seen_in_preceding_slices(document):
+        super().add_seen_documents(document)
+
+  def add_marked_documents(self, *documents):
+    for document in documents:
+      if not self.has_been_marked_in_preceding_slices(document):
+        super().add_marked_documents(document)
 
   def _resolve_actions(self):
     self.add_actions(list(filter(self._action_resolver(), self.session.actions)))

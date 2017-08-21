@@ -22,6 +22,15 @@ class HasDocuments:
     for document in documents:
       self.marked_relevant_documents[ document.record_id ] = document
 
+  def has_been_viewed(self, document):
+    return document.record_id in self.viewed_documents
+
+  def has_been_seen(self, document):
+    return document.record_id in self.seen_documents
+
+  def has_been_marked(self, document):
+    return document.record_id in self.marked_relevant_documents
+
   def seen_highly_relevant_documents(self):
     return [document for document in self.seen_documents.values() if document.is_highly_relevant_for_topic( self.topic )]
 
@@ -122,6 +131,18 @@ class HasDocuments:
     if records is None:
       records = cls.all_with(filter_func)
     return numpy.mean([record.random_click_probability() for record in records])
+
+  @classmethod
+  def median_random_click_probability(cls, filter_func=Filterable.identity_filter, records=None):
+    if records is None:
+      records = cls.all_with(filter_func)
+    return numpy.median([record.random_click_probability() for record in records])
+
+  @classmethod
+  def std_random_click_probability(cls, filter_func=Filterable.identity_filter, records=None):
+    if records is None:
+      records = cls.all_with(filter_func)
+    return numpy.std([record.random_click_probability() for record in records])
 
   @classmethod
   def ratio_of_seen_documents_at_rank(cls, rank, filter_func=Filterable.identity_filter, records=None):

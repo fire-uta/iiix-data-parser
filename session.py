@@ -19,6 +19,16 @@ class Session(DataRecord, Filterable, ActsAsSession):
     super().add_query(query)
     query.session = self
 
+  def viewed_documents_count_at(self, seconds):
+    read_action_tuples = self.document_read_actions_until(seconds)
+    unique_docids = set([action_tuple[1].document_id for action_tuple in read_action_tuples])
+    return len(unique_docids)
+
+  def marked_documents_count_at(self, seconds):
+    mark_action_tuples = self.document_marked_relevant_actions_until(seconds)
+    unique_docids = set([action_tuple[1].document_id for action_tuple in mark_action_tuples])
+    return len(unique_docids)
+
   @classmethod
   def build_session_id(cls, user_id, topic_id):
     return str(user_id) + '-' + str(topic_id)

@@ -12,3 +12,18 @@ class QueryResultDocument:
 
   def is_not_relevant_for_topic(self, topic):
     return self.document.is_not_relevant_for_topic(topic)
+
+  def is_moderately_relevant_for_topic(self, topic):
+    return self.document.is_moderately_relevant_for_topic(topic)
+
+  def is_highly_relevant_for_topic(self, topic):
+    return self.document.is_highly_relevant_for_topic(topic)
+
+  def first_encountered_at_from_session_start_seconds(self):
+    return self.result_list.result_document_first_encountered_at_from_session_start_seconds(self)
+
+  def read_start_at_from_session_start_seconds(self):
+    return self.result_list.result_document_read_start_at_from_session_start_seconds(self)
+
+  def mark_start_at_from_session_start_seconds(self):
+    return self.result_list.result_document_mark_start_at_from_session_start_seconds(self)

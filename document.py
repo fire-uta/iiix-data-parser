@@ -1,10 +1,10 @@
 import sys
 
-
 from numpy import uint16
 
-
 from data_record import DataRecord
+
+from attr_utils import _memoize_attr
 
 
 class Document(DataRecord):
@@ -16,19 +16,26 @@ class Document(DataRecord):
     self.relevances[ str(relevance.topic.record_id) ] = relevance
 
   def get_relevance_for_topic(self, topic):
-    return self.get_relevance_for_topic_id( topic.record_id )
+    return self.get_relevance_for_topic_id(topic.record_id)
 
   def get_relevance_for_topic_id(self, topic_id):
-    return self.relevances.get( str(topic_id) )
+    rel = _memoize_attr(
+        self,
+        '_relevance_for_topic_id_' + str(topic_id),
+        lambda: self.relevances.get(str(topic_id))
+    )
+    if rel is None:
+      raise RuntimeError("ERROR: document ID %s, topic ID %s relevance cannot be determined!" % (self.record_id, topic_id))
+    return rel
 
   def is_relevant_for_topic(self, topic):
-    return self.is_relevant_for_topic_id( topic.record_id )
+    return self.is_relevant_for_topic_id(topic.record_id)
 
   def is_not_relevant_for_topic(self, topic):
-    return not self.is_relevant_for_topic( topic )
+    return not self.is_relevant_for_topic(topic)
 
   def is_relevant_for_topic_id(self, topic_id):
-    return self.get_relevance_for_topic_id( topic_id ).is_relevant()
+    return self.get_relevance_for_topic_id(topic_id).is_relevant()
 
   def is_highly_relevant_for_topic(self, topic):
     return self.is_highly_relevant_for_topic_id( topic.record_id )

@@ -35,6 +35,10 @@ class CombinedLogFile(DataFile):
       for line in log_file:
           parsed_line = _parse_line( line )
 
+          # these occur in weird places and have weird data, so ignore them to avoid trouble
+          if parsed_line['action'] in ['PERFORMANCE', 'DEMOGRAPHICS_SURVEY_STARTED', 'DEMOGRAPHICS_SURVEY_COMPLETED', 'SELF_SEARCH_EFFICACY_SURVEY_STARTED', 'SELF_SEARCH_EFFICACY_SURVEY_COMPLETED', 'PRE_TASK_SURVEY_COMPLETED', 'POST_TASK_SURVEY_COMPLETED', 'SEARCH_TASK_VIEWED']:
+            continue
+
           if parsed_line['action'] == 'QUERY_ISSUED' or parsed_line['action'] == 'QUERY_SUGGESTION_ISSUED':
             self.query_counter += 1
             query_text = parsed_line.get('action_parameters', None)
@@ -47,6 +51,9 @@ class CombinedLogFile(DataFile):
           session = self.__create_or_update_session( user, topic, condition )
 
           query_id = str( self.query_counter )
+          # These actions belong with the next query
+          if parsed_line['action'] in ['SEARCH_TASK_COMMENCED', 'VIEW_SEARCH_BOX']:
+            query_id = str(self.query_counter + 1)
           query = Query.create_or_update( query_id, topic = topic, user = user, session = session, query_text = query_text )
 
           timestamp = _parse_datetime( parsed_line['date'], parsed_line['time'] )

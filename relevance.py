@@ -2,6 +2,8 @@ from data_record import DataRecord
 
 from numpy import uint8
 
+from attr_utils import _memoize_attr
+
 
 class Relevance(DataRecord):
   def __init__(self, topic, document, relevance_level):
@@ -12,10 +14,22 @@ class Relevance(DataRecord):
     self.document.add_relevance( self )
 
   def is_relevant(self):
-    return self.relevance_level > 0
+    return _memoize_attr(
+        self,
+        '_is_relevant',
+        lambda: self.relevance_level > 0
+    )
 
   def is_highly_relevant(self):
-    return self.relevance_level == 2
+    return _memoize_attr(
+        self,
+        '_is_highly_relevant',
+        lambda: self.relevance_level == 2
+    )
 
   def is_moderately_relevant(self):
-    return self.relevance_level == 1
+    return _memoize_attr(
+        self,
+        '_is_moderately_relevant',
+        lambda: self.relevance_level == 1
+    )

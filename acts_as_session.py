@@ -1,9 +1,13 @@
 import itertools
+import numpy
 
 
 from has_actions import HasActions
 from has_queries import HasQueries
 from has_documents import HasDocuments
+
+
+from attr_utils import _memoize_attr
 
 
 class ActsAsSession(HasActions, HasQueries, HasDocuments):
@@ -13,15 +17,6 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
     self.user = user
     self.topic = topic
     self.condition = condition
-
-  def total_snippet_scanning_time_in_seconds(self):
-    # No actions -> No scanning time.
-    if len(self.actions) == 0:
-      return None
-    return self.duration_in_seconds() - sum(self.query_formulation_times()) - sum(self.document_read_times().values())
-
-  def average_snippet_scanning_time_in_seconds(self):
-    return self.total_snippet_scanning_time_in_seconds() / len(self.seen_documents)
 
   def average_document_reading_time_in_seconds(self):
     read_times = self.document_read_times()
@@ -34,6 +29,9 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
   def querying_durations(self):
     query_start_actions = self.actions_by_type('QUERY_FOCUS')
     return [self.action_duration_in_seconds_for(idx, action, 'QUERY_ISSUED') for idx, action in query_start_actions]
+
+  def total_query_durations(self):
+    return [query.duration_in_seconds() for query in self.queries.values()]
 
   def last_ranks(self):
     return [query.last_rank_reached() for query in self.queries.values()]
@@ -60,24 +58,129 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
     return _memoize_attr(
         self,
         '_gain_events',
-        [self.create_gain_pair(action, gain_levels) for (idx, action) in possible_gain_actions if action.gain(gain_levels) > 0]
+        lambda: [self.create_gain_pair(action, gain_levels) for (idx, action) in possible_gain_actions if action.gain(gain_levels) > 0]
     )
 
   def create_gain_pair(self, action, gain_levels):
     return (self.seconds_elapsed_at(action.timestamp), action.gain(gain_levels))
 
+  def total_snippet_scanning_time_in_seconds(self):
+    # No actions -> No scanning time.
+    if len(self.actions) == 0:
+      return None
+    return self.duration_in_seconds() - sum(self.query_formulation_times()) - sum(self.document_read_times().values())
+
+  def cumulated_non_relevant_read_count_at(self, seconds):
+    read_actions = self.document_read_actions_until(seconds)
+    return len(list(filter(lambda action: action[1].document.is_not_relevant_for_topic(self.topic), read_actions)))
+
+  def cumulated_moderately_relevant_read_count_at(self, seconds):
+    read_actions = self.document_read_actions_until(seconds)
+    return len(list(filter(lambda action: action[1].document.is_moderately_relevant_for_topic(self.topic), read_actions)))
+
+  def cumulated_highly_relevant_read_count_at(self, seconds):
+    read_actions = self.document_read_actions_until(seconds)
+    return len(list(filter(lambda action: action[1].document.is_highly_relevant_for_topic(self.topic), read_actions)))
+
+  def cumulated_non_relevant_mark_count_at(self, seconds):
+    mark_actions = self.document_marked_relevant_actions_until(seconds)
+    return len(list(filter(lambda action: action[1].document.is_not_relevant_for_topic(self.topic), mark_actions)))
+
+  def cumulated_moderately_relevant_mark_count_at(self, seconds):
+    mark_actions = self.document_marked_relevant_actions_until(seconds)
+    return len(list(filter(lambda action: action[1].document.is_moderately_relevant_for_topic(self.topic), mark_actions)))
+
+  def cumulated_highly_relevant_mark_count_at(self, seconds):
+    mark_actions = self.document_marked_relevant_actions_until(seconds)
+    return len(list(filter(lambda action: action[1].document.is_highly_relevant_for_topic(self.topic), mark_actions)))
+
+  def non_relevant_results_count_at_rank(self, rank):
+    if rank is None or rank < 1:
+      return None
+    total_count = 0
+    remain = rank
+    for query in self.sorted_queries():
+      if query.continuous_rank_at_end() < rank:
+        total_count += len(query.non_relevant_results())
+        remain -= query.last_rank_reached()
+      else:
+        total_count += len(query.non_relevant_results_up_to_rank(remain))
+        break
+    return total_count
+
+  def moderately_relevant_results_count_at_rank(self, rank):
+    if rank is None or rank < 1:
+      return None
+    total_count = 0
+    remain = rank
+    for query in self.sorted_queries():
+      if query.continuous_rank_at_end() < rank:
+        total_count += len(query.moderately_relevant_results())
+        remain -= query.last_rank_reached()
+      else:
+        total_count += len(query.moderately_relevant_results_up_to_rank(remain))
+        break
+    return total_count
+
+  def highly_relevant_results_count_at_rank(self, rank):
+    if rank is None or rank < 1:
+      return None
+    total_count = 0
+    remain = rank
+    for query in self.sorted_queries():
+      if query.continuous_rank_at_end() < rank:
+        total_count += len(query.highly_relevant_results())
+        remain -= query.last_rank_reached()
+      else:
+        total_count += len(query.highly_relevant_results_up_to_rank(remain))
+        break
+    return total_count
+
   @classmethod
   def average_document_reading_time_in_seconds_over(cls, sessions):
+    reading_times = cls.document_reading_times_in_seconds_over(sessions)
+    return sum(reading_times) / len(reading_times)
+
+  @classmethod
+  def median_document_reading_time_in_seconds_over(cls, sessions):
+    reading_times = cls.document_reading_times_in_seconds_over(sessions)
+    return numpy.median(reading_times)
+
+  @classmethod
+  def std_document_reading_time_in_seconds_over(cls, sessions):
+    reading_times = cls.document_reading_times_in_seconds_over(sessions)
+    return numpy.std(reading_times)
+
+  @classmethod
+  def mean_document_reading_time_in_seconds_over(cls, sessions):
+    reading_times = cls.document_reading_times_in_seconds_over(sessions)
+    return numpy.mean(reading_times)
+
+  @classmethod
+  def document_reading_times_in_seconds_over(cls, sessions):
     reading_times = [session.document_read_times().values() for session in sessions]
     # Remove Nones from the reading times
-    merged_reading_times = list(filter(None.__ne__, itertools.chain.from_iterable(reading_times)))
-    return sum(merged_reading_times) / len(merged_reading_times)
+    return list(filter(None.__ne__, itertools.chain.from_iterable(reading_times)))
 
   @classmethod
   def average_query_formulation_time_in_seconds_over(cls, sessions):
+    querying_durations = cls.query_formulation_times_in_seconds_over(sessions)
+    return sum(querying_durations) / len(querying_durations)
+
+  @classmethod
+  def median_query_formulation_time_in_seconds_over(cls, sessions):
+    querying_durations = cls.query_formulation_times_in_seconds_over(sessions)
+    return numpy.median(querying_durations)
+
+  @classmethod
+  def std_query_formulation_time_in_seconds_over(cls, sessions):
+    querying_durations = cls.query_formulation_times_in_seconds_over(sessions)
+    return numpy.std(querying_durations)
+
+  @classmethod
+  def query_formulation_times_in_seconds_over(cls, sessions):
     querying_durations = [session.querying_durations() for session in sessions]
-    merged_durations = list(filter(None.__ne__, itertools.chain.from_iterable(querying_durations)))
-    return sum(merged_durations) / len(merged_durations)
+    return list(filter(None.__ne__, itertools.chain.from_iterable(querying_durations)))
 
   @classmethod
   def average_snippet_scanning_time_in_seconds_over(cls, sessions):
@@ -88,26 +191,96 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
 
   @classmethod
   def average_last_rank_reached_over(cls, sessions):
+    last_ranks = cls.last_ranks_reached_over(sessions)
+    return sum(last_ranks) / len(last_ranks)
+
+  @classmethod
+  def median_last_rank_reached_over(cls, sessions):
+    last_ranks = cls.last_ranks_reached_over(sessions)
+    return numpy.median(last_ranks)
+
+  @classmethod
+  def std_last_rank_reached_over(cls, sessions):
+    last_ranks = cls.last_ranks_reached_over(sessions)
+    return numpy.std(last_ranks)
+
+  @classmethod
+  def last_ranks_reached_over(cls, sessions):
     last_ranks = [session.last_ranks() for session in sessions]
-    merged_last_ranks = list(filter(None.__ne__, itertools.chain.from_iterable(last_ranks)))
-    return sum(merged_last_ranks) / len(merged_last_ranks)
+    return list(filter(None.__ne__, itertools.chain.from_iterable(last_ranks)))
 
   @classmethod
   def average_amount_of_non_relevant_documents_seen_at_last_rank_over(cls, sessions):
+    amounts_of_non_relevant_docs_seen_at_last_rank = cls.amounts_of_non_relevant_documents_seen_at_last_rank_over(sessions)
+    return sum(amounts_of_non_relevant_docs_seen_at_last_rank) / len(amounts_of_non_relevant_docs_seen_at_last_rank)
+
+  @classmethod
+  def median_amount_of_non_relevant_documents_seen_at_last_rank_over(cls, sessions):
+    amounts_of_non_relevant_docs_seen_at_last_rank = cls.amounts_of_non_relevant_documents_seen_at_last_rank_over(sessions)
+    return numpy.median(amounts_of_non_relevant_docs_seen_at_last_rank)
+
+  @classmethod
+  def std_amount_of_non_relevant_documents_seen_at_last_rank_over(cls, sessions):
+    amounts_of_non_relevant_docs_seen_at_last_rank = cls.amounts_of_non_relevant_documents_seen_at_last_rank_over(sessions)
+    return numpy.std(amounts_of_non_relevant_docs_seen_at_last_rank)
+
+  @classmethod
+  def amounts_of_non_relevant_documents_seen_at_last_rank_over(cls, sessions):
     amounts_of_non_relevant_docs_seen_at_last_rank = [session.amounts_of_non_relevant_docs_seen_at_last_rank() for session in sessions]
-    merged_amounts = list(filter(None.__ne__, itertools.chain.from_iterable(amounts_of_non_relevant_docs_seen_at_last_rank)))
-    return sum(merged_amounts) / len(merged_amounts)
+    return list(filter(None.__ne__, itertools.chain.from_iterable(amounts_of_non_relevant_docs_seen_at_last_rank)))
 
   @classmethod
   def average_amount_of_contiguous_non_relevant_documents_seen_at_last_rank_over(cls, sessions):
+    amounts_of_contiguous_non_relevant_docs_seen_at_last_rank = cls.amounts_of_contiguous_non_relevant_documents_seen_at_last_rank_over(sessions)
+    return sum(amounts_of_contiguous_non_relevant_docs_seen_at_last_rank) / len(amounts_of_contiguous_non_relevant_docs_seen_at_last_rank)
+
+  @classmethod
+  def median_amount_of_contiguous_non_relevant_documents_seen_at_last_rank_over(cls, sessions):
+    amounts_of_contiguous_non_relevant_docs_seen_at_last_rank = cls.amounts_of_contiguous_non_relevant_documents_seen_at_last_rank_over(sessions)
+    return numpy.median(amounts_of_contiguous_non_relevant_docs_seen_at_last_rank)
+
+  @classmethod
+  def std_amount_of_contiguous_non_relevant_documents_seen_at_last_rank_over(cls, sessions):
+    amounts_of_contiguous_non_relevant_docs_seen_at_last_rank = cls.amounts_of_contiguous_non_relevant_documents_seen_at_last_rank_over(sessions)
+    return numpy.std(amounts_of_contiguous_non_relevant_docs_seen_at_last_rank)
+
+  @classmethod
+  def amounts_of_contiguous_non_relevant_documents_seen_at_last_rank_over(cls, sessions):
     amounts_of_contiguous_non_relevant_docs_seen_at_last_rank = [session.amounts_of_contiguous_non_relevant_docs_seen_at_last_rank() for session in sessions]
-    merged_amounts = list(filter(None.__ne__, itertools.chain.from_iterable(amounts_of_contiguous_non_relevant_docs_seen_at_last_rank)))
-    return sum(merged_amounts) / len(merged_amounts)
+    return list(filter(None.__ne__, itertools.chain.from_iterable(amounts_of_contiguous_non_relevant_docs_seen_at_last_rank)))
 
   @classmethod
   def average_random_click_probability_over(cls, sessions):
     return cls.average_random_click_probability(records=sessions)
 
   @classmethod
+  def median_random_click_probability_over(cls, sessions):
+    return cls.median_random_click_probability(records=sessions)
+
+  @classmethod
+  def std_random_click_probability_over(cls, sessions):
+    return cls.std_random_click_probability(records=sessions)
+
+  @classmethod
   def average_ratio_of_seen_documents_at_rank_over(cls, rank, sessions):
     return cls.ratio_of_seen_documents_at_rank(rank, records=sessions)
+
+  @classmethod
+  def average_total_query_duration_over(cls, sessions):
+    total_query_durations = cls.total_query_durations_over(sessions)
+    return sum(total_query_durations) / len(total_query_durations)
+
+  @classmethod
+  def median_total_query_duration_over(cls, sessions):
+    total_query_durations = cls.total_query_durations_over(sessions)
+    return numpy.median(total_query_durations)
+
+  @classmethod
+  def std_total_query_duration_over(cls, sessions):
+    total_query_durations = cls.total_query_durations_over(sessions)
+    return numpy.std(total_query_durations)
+
+  @classmethod
+  def total_query_durations_over(cls, sessions):
+    total_query_durations = [session.total_query_durations() for session in sessions]
+    return list(filter(None.__ne__, itertools.chain.from_iterable(total_query_durations)))

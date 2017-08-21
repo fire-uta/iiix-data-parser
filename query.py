@@ -13,6 +13,9 @@ from filterable import Filterable
 from has_documents import HasDocuments
 
 
+from attr_utils import _memoize_attr
+
+
 class Query(DataRecord, HasActions, Filterable, HasDocuments):
   def __init__(self, query_id, topic = None, user = None, condition = None, autocomplete = None, query_text = None, session = None, precision = None):
     DataRecord.__init__( self, str(query_id) )
@@ -26,13 +29,37 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
     self.precision = precision
     self.result_list = QueryResultList(self)
 
+  def _rank_sanity_check(self, rank):
+    if int(rank) < 1 or int(rank) > self.result_list.length():
+        raise RuntimeError("Attempted to fetch results up to rank %s for query %s (%s), which is impossible." % (rank, self.record_id, self.query_text))
+
   def add_to_result_list( self, rank, document ):
     self.result_list.add( rank, document )
 
   def results_up_to_rank( self, rank ):
-    if int(rank) < 1 or int(rank) > self.result_list.length():
-        raise RuntimeError("Attempted to fetch results up to rank %s for query %s (%s), which is impossible." % (rank, self.record_id, self.query_text))
+    self._rank_sanity_check(rank)
     return self.result_list.results_up_to_rank( rank )
+
+  def non_relevant_results_up_to_rank(self, rank):
+    self._rank_sanity_check(rank)
+    return self.result_list.non_relevant_results_up_to_rank(rank)
+
+  def non_relevant_results(self):
+    return self.non_relevant_results_up_to_rank(self.last_rank_reached())
+
+  def moderately_relevant_results_up_to_rank(self, rank):
+    self._rank_sanity_check(rank)
+    return self.result_list.moderately_relevant_results_up_to_rank(rank)
+
+  def moderately_relevant_results(self):
+    return self.moderately_relevant_results_up_to_rank(self.last_rank_reached())
+
+  def highly_relevant_results_up_to_rank(self, rank):
+    self._rank_sanity_check(rank)
+    return self.result_list.highly_relevant_results_up_to_rank(rank)
+
+  def highly_relevant_results(self):
+    return self.highly_relevant_results_up_to_rank(self.last_rank_reached())
 
   def results_between(self, rank_start, rank_end):
     result_length = self.result_list.length()
@@ -40,14 +67,41 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
         raise RuntimeError("Attempted to fetch results between rank %s and %s for query %s (%s), which is impossible." % (rank_start, rank_end, self.record_id, self.query_text))
     return self.result_list.results_between(rank_start, rank_end)
 
+  def focus_action(self):
+    focus_actions = self.actions_by_type('QUERY_FOCUS')
+    if len(focus_actions) == 0:
+      return (None, None)
+    return self.actions_by_type('QUERY_FOCUS')[0]
+
   def formulation_time_in_seconds(self):
-    (idx, query_start_action) = self.actions_by_type( 'QUERY_FOCUS' )[0]
-    return self.action_duration_in_seconds_for( idx, query_start_action, 'QUERY_ISSUED' )
+    (idx, query_start_action) = self.focus_action()
+    return self.action_duration_in_seconds_for(idx, query_start_action, 'QUERY_ISSUED') if query_start_action is not None else None
+
+  def formulation_event(self):
+    (idx, query_start_action) = self.focus_action()
+    action_duration = self.action_duration_in_seconds_for(idx, query_start_action, 'QUERY_ISSUED') if query_start_action is not None else None
+    return {
+        'query_formulation_duration': action_duration,
+        'query_formulation_start_at': self.session.seconds_elapsed_at(query_start_action.timestamp) if query_start_action is not None else None,
+        'autocomplete': self.autocomplete,
+        'query_text': self.query_text,
+        'precision': self.precision,
+        'average_snippet_scan_duration': self.average_snippet_scanning_time_in_seconds(),
+        'query_order_number': self.order_number(),
+        'duration_in_seconds': self.duration_in_seconds()
+    }
 
   def last_rank_reached(self):
+    return _memoize_attr(
+        self,
+        '_last_rank_reached',
+        lambda: self._calculate_last_rank_reached()
+    )
+
+  def _calculate_last_rank_reached(self):
     current_rank_candidate = 1
     for action in reversed(self.actions):
-      if hasattr( action, 'rank' ) and int(action.rank) > current_rank_candidate:
+      if hasattr(action, 'rank') and int(action.rank) > current_rank_candidate:
         current_rank_candidate = int(action.rank)
     # Note that this may also return one if there were no actions with a rank.
     # That means the user bailed without doing anything, so it counts as rank 1.
@@ -74,6 +128,28 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
       else:
         break
     return contiguous_non_relevants
+
+  def total_snippet_scanning_time_in_seconds(self):
+    # No actions -> No scanning time.
+    if len(self.actions) == 0:
+      return None
+    formulation_time = self.formulation_time_in_seconds()
+    formulation_time = 0 if formulation_time is None else formulation_time  # Act as if formulation was instant
+    return self.duration_in_seconds() - formulation_time - sum(self.document_read_times().values())
+
+  def continuous_rank_at(self, rank):
+    prior_queries = self.session.queries_prior_to(self)
+    prior_last_ranks = [query.last_rank_reached() for query in prior_queries]
+    return sum(prior_last_ranks) + rank
+
+  def continuous_rank_at_end(self):
+    return self.continuous_rank_at(self.last_rank_reached())
+
+  def order_number(self):
+    return self.session.sorted_queries().index(self) + 1
+
+  def rank_of(self, document):
+    return self.result_list.rank_of(document)
 
   @classmethod
   def average_formulation_time_in_seconds(cls, filter_func = lambda query: True):
