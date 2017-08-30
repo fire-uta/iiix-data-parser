@@ -11,8 +11,11 @@ class QueryResultList:
   def add( self, rank, document ):
     self.result_documents.insert( int(rank) - 1, QueryResultDocument( self, rank, document ) )
 
-  def results_up_to_rank(self, rank):
-    return self.result_documents[:int(rank)]
+  def results_up_to_rank(self, rank, relevance_level=None):
+    if relevance_level is None:
+      return self.result_documents[:int(rank)]
+    else:
+      return filter(lambda result_document: result_document.has_relevance_level(relevance_level, self.query.topic), self.result_documents[:int(rank)])
 
   def non_relevant_results_up_to_rank(self, rank):
     return _memoize_attr(

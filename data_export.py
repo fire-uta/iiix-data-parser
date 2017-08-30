@@ -1,6 +1,36 @@
-def export_read_events_as_csv(sessions, file_name):
+import csv
+
+
+import numpy
+
+
+from result_file import ResultFile
+from queries_summary_file import QueriesSummaryFile
+from log_file import LogFile
+from combined_log_file import CombinedLogFile
+from document import Document
+from query import Query
+from topic import Topic
+from user import User
+from condition import Condition
+from action import Action
+from session import Session
+from relevance import Relevance
+from filterable import Filterable
+from session_time_slice import SessionTimeSlice
+
+
+def export_read_events_as_csv(sessions, file_name, gains):
   with open(file_name, 'w') as export_file:
-    field_names = ['session_id', 'topic', 'condition', 'document_id', 'relevance', 'read_start_at', 'read_duration', 'gain_at_read_start', 'marked?', 'marked_at', 'rank', 'continuous_rank', 'query_order_nr', 'cumulated_read_count_0', 'cumulated_read_count_1', 'cumulated_read_count_2', 'cumulated_scan_count_0', 'cumulated_scan_count_1', 'cumulated_scan_count_2']
+    field_names = ['session_id', 'topic', 'condition', 'document_id', 'relevance', 'read_start_at', 'read_duration',
+                   'gain_at_read_start', 'marked?', 'marked_at', 'rank', 'continuous_rank', 'query_order_num',
+                   'cumulated_read_count_nr_inc1', 'cumulated_read_count_nr_inc2', 'cumulated_read_count_nr_inc3+',
+                   'cumulated_read_count_mr_inc1', 'cumulated_read_count_mr_inc2', 'cumulated_read_count_mr_inc3+',
+                   'cumulated_read_count_hr_inc1', 'cumulated_read_count_hr_inc2', 'cumulated_read_count_hr_inc3+',
+                   'cumulated_scan_count_nr_inc1', 'cumulated_scan_count_nr_inc2', 'cumulated_scan_count_nr_inc3+',
+                   'cumulated_scan_count_mr_inc1', 'cumulated_scan_count_mr_inc2', 'cumulated_scan_count_mr_inc3+',
+                   'cumulated_scan_count_hr_inc1', 'cumulated_scan_count_hr_inc2', 'cumulated_scan_count_hr_inc3+',
+                   'document_incidence']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
     writer.writeheader()
     for session in sessions:
@@ -18,17 +48,30 @@ def export_read_events_as_csv(sessions, file_name):
             'marked_at': session.document_mark_start_at_seconds(read_event['document']),
             'rank': read_event['rank'],
             'continuous_rank': read_event['continuous_rank'],
-            'query_order_nr': read_event['query_order_number'],
-            'cumulated_read_count_0': session.cumulated_non_relevant_read_count_at(read_event['read_start_at_seconds']),
-            'cumulated_read_count_1': session.cumulated_moderately_relevant_read_count_at(read_event['read_start_at_seconds']),
-            'cumulated_read_count_2': session.cumulated_highly_relevant_read_count_at(read_event['read_start_at_seconds']),
-            'cumulated_scan_count_0': session.non_relevant_results_count_at_rank(read_event['continuous_rank']),
-            'cumulated_scan_count_1': session.moderately_relevant_results_count_at_rank(read_event['continuous_rank']),
-            'cumulated_scan_count_2': session.highly_relevant_results_count_at_rank(read_event['continuous_rank'])
+            'query_order_num': read_event['query_order_number'],
+            'cumulated_read_count_nr_inc1': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=0, incidence_match=lambda i: i == 1),
+            'cumulated_read_count_nr_inc2': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=0, incidence_match=lambda i: i == 2),
+            'cumulated_read_count_nr_inc3+': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=0, incidence_match=lambda i: i >= 3),
+            'cumulated_read_count_mr_inc1': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=1, incidence_match=lambda i: i == 1),
+            'cumulated_read_count_mr_inc2': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=1, incidence_match=lambda i: i == 2),
+            'cumulated_read_count_mr_inc3+': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=1, incidence_match=lambda i: i >= 3),
+            'cumulated_read_count_hr_inc1': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=2, incidence_match=lambda i: i == 1),
+            'cumulated_read_count_hr_inc2': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=2, incidence_match=lambda i: i == 2),
+            'cumulated_read_count_hr_inc3+': session.cumulated_read_count_at(read_event['read_start_at_seconds'], relevance_level=2, incidence_match=lambda i: i >= 3),
+            'cumulated_scan_count_nr_inc1': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=0, incidence_match=lambda i: i == 1),
+            'cumulated_scan_count_nr_inc2': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=0, incidence_match=lambda i: i == 2),
+            'cumulated_scan_count_nr_inc3+': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=0, incidence_match=lambda i: i >= 3),
+            'cumulated_scan_count_mr_inc1': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=1, incidence_match=lambda i: i == 1),
+            'cumulated_scan_count_mr_inc2': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=1, incidence_match=lambda i: i == 2),
+            'cumulated_scan_count_mr_inc3+': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=1, incidence_match=lambda i: i >= 3),
+            'cumulated_scan_count_hr_inc1': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=2, incidence_match=lambda i: i == 1),
+            'cumulated_scan_count_hr_inc2': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=2, incidence_match=lambda i: i == 2),
+            'cumulated_scan_count_hr_inc3+': session.results_count_at_rank(read_event['continuous_rank'], relevance_level=2, incidence_match=lambda i: i >= 3),
+            'document_incidence': read_event['document_incidence']
         })
 
 
-def export_query_formulation_events_as_csv(sessions, file_name):
+def export_query_formulation_events_as_csv(sessions, file_name, gains):
   with open(file_name, 'w') as export_file:
     field_names = ['session_id', 'topic', 'condition', 'query_formulation_start_at', 'query_formulation_duration', 'gain_at_query_formulation_start', 'total_query_duration', 'average_snippet_scan_duration', 'query_order_nr', 'autocomplete', 'map', 'query_text']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
@@ -53,7 +96,7 @@ def export_query_formulation_events_as_csv(sessions, file_name):
         })
 
 
-def export_marked_relevant_events_as_csv(sessions, file_name):
+def export_marked_relevant_events_as_csv(sessions, file_name, gains):
   with open(file_name, 'w') as export_file:
     field_names = ['session_id', 'topic', 'condition', 'document_id', 'relevance', 'mark_start_at', 'mark_duration', 'gain_before_mark_start', 'rank', 'continuous_rank', 'query_order_nr', 'cumulated_mark_count_0', 'cumulated_mark_count_1', 'cumulated_mark_count_2', 'cumulated_read_count_0', 'cumulated_read_count_1', 'cumulated_read_count_2']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
@@ -81,7 +124,7 @@ def export_marked_relevant_events_as_csv(sessions, file_name):
         })
 
 
-def export_scanned_documents_as_csv(sessions, file_name):
+def export_scanned_documents_as_csv(sessions, file_name, gains):
   with open(file_name, 'w') as export_file:
     field_names = ['session_id', 'topic', 'condition', 'query_id', 'rank', 'document_id', 'relevance', 'clicked?', 'marked?', 'first_encountered', 'clicked_at', 'marked_at', 'continuous_rank', 'query_order_nr', 'gain_after_marking', 'cumulated_scan_count_0', 'cumulated_scan_count_1', 'cumulated_scan_count_2']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
@@ -118,14 +161,14 @@ def export_scanned_documents_as_csv(sessions, file_name):
           })
 
 
-def export_actions(reject_groups):
+def export_actions(reject_groups, gains):
   for name, group in reject_groups.items():
     full_filter = Filterable.combine_filters(Filterable.user_filter(*group['users']),
                                              Filterable.practice_topic_reject_filter)
-    export_scanned_documents_as_csv(Session.filtered_records(full_filter), name + '_scanned_documents.csv')
-    export_read_events_as_csv(Session.filtered_records(full_filter), name + '_read_events.csv')
-    export_marked_relevant_events_as_csv(Session.filtered_records(full_filter), name + '_marked_relevant_events.csv')
-    export_query_formulation_events_as_csv(Session.filtered_records(full_filter), name + '_query_formulation_events.csv')
+    export_scanned_documents_as_csv(Session.filtered_records(full_filter), name + '_scanned_documents.csv', gains)
+    export_read_events_as_csv(Session.filtered_records(full_filter), name + '_read_events.csv', gains)
+    export_marked_relevant_events_as_csv(Session.filtered_records(full_filter), name + '_marked_relevant_events.csv', gains)
+    export_query_formulation_events_as_csv(Session.filtered_records(full_filter), name + '_query_formulation_events.csv', gains)
 
 
 def export_entities():

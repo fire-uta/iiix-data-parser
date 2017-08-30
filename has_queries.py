@@ -48,3 +48,7 @@ class HasQueries:
         '_sorted_queries',
         lambda: sorted(self.queries.values(), key=lambda q: q.get_start_timestamp())
     )
+
+  def incidence_of(self, document, query):
+    prior_queries = self.queries_prior_to(query)
+    return sum([1 if prior_query.has_been_seen(document) else 0 for prior_query in prior_queries]) + 1

@@ -28,6 +28,9 @@ class Document(DataRecord):
       raise RuntimeError("ERROR: document ID %s, topic ID %s relevance cannot be determined!" % (self.record_id, topic_id))
     return rel
 
+  def has_relevance_level(self, relevance_level, topic):
+    return self.get_relevance_for_topic(topic).relevance_level == relevance_level
+
   def is_relevant_for_topic(self, topic):
     return self.is_relevant_for_topic_id(topic.record_id)
 
