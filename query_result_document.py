@@ -7,6 +7,9 @@ class QueryResultDocument:
     self.rank = uint16(rank)
     self.document = document
 
+  def get_relevance_for_topic(self, topic):
+    return self.document.get_relevance_for_topic(topic)
+
   def has_relevance_level(self, relevance_level, topic):
     return self.document.has_relevance_level(relevance_level, topic)
 

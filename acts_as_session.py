@@ -70,9 +70,9 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
       return None
     return self.duration_in_seconds() - sum(self.query_formulation_times()) - sum(self.document_read_times().values())
 
-  def cumulated_read_count_at(self, seconds, relevance_level=None, incidence_match=lambda i: True):
+  def cumulated_read_count_at(self, seconds, relevance_level_match=lambda r: True, incidence_match=lambda i: True):
     read_actions = self.document_read_actions_until(seconds)
-    return len(list(filter(lambda action: action[1].document.has_relevance_level(relevance_level, self.topic) and incidence_match(self.incidence_of(action[1].document, action[1].query)), read_actions)))
+    return len(list(filter(lambda action: relevance_level_match(action[1].document.get_relevance_for_topic(self.topic).relevance_level) and incidence_match(self.incidence_of(action[1].document, action[1].query)), read_actions)))
 
   def cumulated_non_relevant_read_count_at(self, seconds):
     read_actions = self.document_read_actions_until(seconds)
@@ -86,9 +86,9 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
     read_actions = self.document_read_actions_until(seconds)
     return len(list(filter(lambda action: action[1].document.is_highly_relevant_for_topic(self.topic), read_actions)))
 
-  def cumulated_mark_count_at(self, seconds, relevance_level=None, incidence_match=lambda i: True):
+  def cumulated_mark_count_at(self, seconds, relevance_level_match=lambda r: True, incidence_match=lambda i: True):
     mark_actions = self.document_marked_relevant_actions_until(seconds)
-    return len(list(filter(lambda action: action[1].document.has_relevance_level(relevance_level, self.topic) and incidence_match(self.incidence_of(action[1].document, action[1].query)), mark_actions)))
+    return len(list(filter(lambda action: relevance_level_match(action[1].document.get_relevance_for_topic(self.topic).relevance_level) and incidence_match(self.incidence_of(action[1].document, action[1].query)), mark_actions)))
 
   def cumulated_non_relevant_mark_count_at(self, seconds):
     mark_actions = self.document_marked_relevant_actions_until(seconds)
@@ -102,17 +102,17 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
     mark_actions = self.document_marked_relevant_actions_until(seconds)
     return len(list(filter(lambda action: action[1].document.is_highly_relevant_for_topic(self.topic), mark_actions)))
 
-  def results_count_at_rank(self, rank, relevance_level=None, incidence_match=lambda i: True):
+  def results_count_at_rank(self, rank, relevance_level_match=lambda r: True, incidence_match=lambda i: True):
     if rank is None or rank < 1:
       return None
     total_count = 0
     remain = rank
     for query in self.sorted_queries():
       if query.continuous_rank_at_end() < rank:
-        total_count += len(list(filter(lambda result_document: incidence_match(self.incidence_of(result_document.document, query)), query.results_of_relevance_level(relevance_level))))
+        total_count += len(list(filter(lambda result_document: incidence_match(self.incidence_of(result_document.document, query)), query.results_of_relevance_level(relevance_level_match))))
         remain -= query.last_rank_reached()
       else:
-        total_count += len(list(filter(lambda result_document: incidence_match(self.incidence_of(result_document.document, query)), query.results_up_to_rank(remain, relevance_level=relevance_level))))
+        total_count += len(list(filter(lambda result_document: incidence_match(self.incidence_of(result_document.document, query)), query.results_up_to_rank(remain, relevance_level_match=relevance_level_match))))
         break
     return total_count
 

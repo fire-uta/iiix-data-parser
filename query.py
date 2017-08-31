@@ -36,16 +36,16 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
   def add_to_result_list( self, rank, document ):
     self.result_list.add( rank, document )
 
-  def results_up_to_rank(self, rank, relevance_level=None):
+  def results_up_to_rank(self, rank, relevance_level_match=lambda r: True):
     self._rank_sanity_check(rank)
-    return self.result_list.results_up_to_rank(rank, relevance_level=relevance_level)
+    return self.result_list.results_up_to_rank(rank, relevance_level_match=relevance_level_match)
 
   def non_relevant_results_up_to_rank(self, rank):
     self._rank_sanity_check(rank)
     return self.result_list.non_relevant_results_up_to_rank(rank)
 
-  def results_of_relevance_level(self, relevance_level):
-    return self.results_up_to_rank(self.last_rank_reached(), relevance_level=relevance_level)
+  def results_of_relevance_level(self, relevance_level_match):
+    return self.results_up_to_rank(self.last_rank_reached(), relevance_level_match=relevance_level_match)
 
   def non_relevant_results(self):
     return self.non_relevant_results_up_to_rank(self.last_rank_reached())
