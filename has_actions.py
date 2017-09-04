@@ -9,7 +9,7 @@ class HasActions:
     self.actions = sorted(self.actions, key=lambda action: action.timestamp)
 
   def actions_by_type(self, action_type):
-    return [(idx, action) for idx, action in enumerate(self.actions) if action.action_type == action_type]
+    return self.actions_by_filter(lambda a: a.action_type == action_type)
 
   def actions_by_type_until(self, action_type, seconds):
     return _memoize_attr(
@@ -18,12 +18,27 @@ class HasActions:
         lambda: self._calculate_actions_by_type_until(action_type, seconds)
     )
 
+  def actions_by_filter(self, filter_func=lambda a: False):
+    return [(idx, action) for idx, action in enumerate(self.actions) if filter_func(action)]
+
   def _calculate_actions_by_type_until(self, action_type, seconds):
+    return self._calculate_actions_by_filter_until(lambda a: a.action_type == action_type, seconds)
+
+  def _calculate_actions_by_filter_until(self, filter_func=lambda a: False, seconds=0):
     actions = []
     for idx, action in enumerate(self.actions):
       if self.seconds_elapsed_at(action.timestamp) > seconds:
         break
-      if action.action_type == action_type:
+      if filter_func(action):
+        actions.append((idx, action))
+    return actions
+
+  def actions_by_filter_before_action(self, filter_func, target_action):
+    actions = []
+    for idx, action in enumerate(self.actions):
+      if action == target_action:
+        break
+      if filter_func(action):
         actions.append((idx, action))
     return actions
 
@@ -113,7 +128,8 @@ class HasActions:
           'query': action.query,
           'continuous_rank': action.query.continuous_rank_at(rank) if rank is not None else None,
           'query_order_number': action.query.order_number(),
-          'document_incidence': action.session.incidence_of(document, action.query)
+          'document_incidence': action.incidence_of_document(),
+          'read_incidence': action.read_incidence_of_document()
       })
     return read_events
 

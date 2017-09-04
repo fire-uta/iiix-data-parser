@@ -28,7 +28,7 @@ def export_read_events_as_csv(sessions, file_name, gains):
                    'cumulated_read_count_r_inc1', 'cumulated_read_count_r_inc2+',
                    'cumulated_scan_count_nr_inc1', 'cumulated_scan_count_nr_inc2+',
                    'cumulated_scan_count_r_inc1', 'cumulated_scan_count_r_inc2+',
-                   'document_incidence']
+                   'document_incidence', 'read_incidence']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
     writer.writeheader()
     for session in sessions:
@@ -55,7 +55,8 @@ def export_read_events_as_csv(sessions, file_name, gains):
             'cumulated_scan_count_nr_inc2+': session.results_count_at_rank(read_event['continuous_rank'], relevance_level_match=lambda r: r == 0, incidence_match=lambda i: i >= 2),
             'cumulated_scan_count_r_inc1': session.results_count_at_rank(read_event['continuous_rank'], relevance_level_match=lambda r: r >= 1, incidence_match=lambda i: i == 1),
             'cumulated_scan_count_r_inc2+': session.results_count_at_rank(read_event['continuous_rank'], relevance_level_match=lambda r: r >= 1, incidence_match=lambda i: i >= 2),
-            'document_incidence': read_event['document_incidence']
+            'document_incidence': read_event['document_incidence'],
+            'read_incidence': read_event['read_incidence']
         })
 
 

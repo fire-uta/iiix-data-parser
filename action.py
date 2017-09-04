@@ -15,70 +15,71 @@ def should_use_alt_params():
 
 class Action(DataRecord, Filterable):
 
-  DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank' ]
-  ALT_DOCUMENT_EVENT_PARAMS = [ 'document_id2', 'document_id', 'user_relevance_score', 'rank' ]
-  QUERY_EVENT_PARAMS = [ 'query_id', 'query_text' ]
-  ALT_QUERY_EVENT_PARAMS = [ 'query_text' ]
+  DOCUMENT_EVENT_PARAMS = ['document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank']
+  ALT_DOCUMENT_EVENT_PARAMS = ['document_id2', 'document_id', 'user_relevance_score', 'rank']
+  QUERY_EVENT_PARAMS = ['query_id', 'query_text']
+  ALT_QUERY_EVENT_PARAMS = ['query_text']
 
   PARAMS = {
-    'QUERY_ISSUED': QUERY_EVENT_PARAMS,
-    'VIEW_SEARCH_RESULTS_PAGE': [ 'result_page' ],
-    'DOCUMENT_HOVER_IN': DOCUMENT_EVENT_PARAMS,
-    'DOCUMENT_HOVER_OUT': DOCUMENT_EVENT_PARAMS,
-    'DOC_MARKED_VIEWED': DOCUMENT_EVENT_PARAMS,
-    'DOC_MARKED_RELEVANT': DOCUMENT_EVENT_PARAMS,
-    'QUERY_FOCUS': [],
-    'NEXT_QUERY_ISSUED': QUERY_EVENT_PARAMS,
-    'NEXT_QUERY_FOCUS': [],
-    'INTERACTION_COMPLETE': [],
-    'EXPERIMENT_TIMEOUT': [],
-    'SEARCH_TASK_COMPLETED': []
+      'QUERY_ISSUED': QUERY_EVENT_PARAMS,
+      'VIEW_SEARCH_RESULTS_PAGE': ['result_page'],
+      'DOCUMENT_HOVER_IN': DOCUMENT_EVENT_PARAMS,
+      'DOCUMENT_HOVER_OUT': DOCUMENT_EVENT_PARAMS,
+      'DOC_MARKED_VIEWED': DOCUMENT_EVENT_PARAMS,
+      'DOC_MARKED_RELEVANT': DOCUMENT_EVENT_PARAMS,
+      'QUERY_FOCUS': [],
+      'NEXT_QUERY_ISSUED': QUERY_EVENT_PARAMS,
+      'NEXT_QUERY_FOCUS': [],
+      'INTERACTION_COMPLETE': [],
+      'EXPERIMENT_TIMEOUT': [],
+      'SEARCH_TASK_COMPLETED': []
   }
 
   ALT_PARAMS = PARAMS.copy()
-  ALT_PARAMS.update( {
-    'DOC_MARKED_VIEWED': ALT_DOCUMENT_EVENT_PARAMS,
-    'DEMOGRAPHICS_SURVEY_STARTED': [],
-    'DEMOGRAPHICS_SURVEY_COMPLETED': [],
-    'SELF_SEARCH_EFFICACY_SURVEY_STARTED': [],
-    'SELF_SEARCH_EFFICACY_SURVEY_COMPLETED': [],
-    'PRE_TASK_SURVEY_COMPLETED': [],
-    'SEARCH_TASK_COMMENCED': [],
-    'VIEW_SEARCH_BOX': [],
-    'SEARCH_TASK_VIEWED': [],
-    'VIEW_SAVED_DOCS': [],
-    'POST_TASK_SURVEY_COMPLETED': [],
-    'NASA_LOAD_SURVEY_STARTED': [],
-    'NASA_LOAD_SURVEY_COMPLETED': [],
-    'NASA_QUERY_LOAD_SURVEY_STARTED': [],
-    'NASA_QUERY_LOAD_SURVEY_COMPLETED': [],
-    'NASA_NAVIGATION_LOAD_SURVEY_STARTED': [],
-    'NASA_NAVIGATION_LOAD_SURVEY_COMPLETED': [],
-    'NASA_ASSESSMENT_LOAD_SURVEY_STARTED': [],
-    'NASA_ASSESSMENT_LOAD_SURVEY_COMPLETED': [],
-    'NASA_COMPARE_FACTORS_SURVEY_STARTED': [],
-    'NASA_COMPARE_FACTORS_SURVEY_COMPLETED': [],
-    'PERFORMANCE': [],
-    'DOC_MARKED_NONRELEVANT': DOCUMENT_EVENT_PARAMS,
-    'QUERY_SUGGESTION_ISSUED': ALT_QUERY_EVENT_PARAMS,
-    'QUERY_ISSUED': ALT_QUERY_EVENT_PARAMS
-  } )
+  ALT_PARAMS.update({
+      'DOC_MARKED_VIEWED': ALT_DOCUMENT_EVENT_PARAMS,
+      'DEMOGRAPHICS_SURVEY_STARTED': [],
+      'DEMOGRAPHICS_SURVEY_COMPLETED': [],
+      'SELF_SEARCH_EFFICACY_SURVEY_STARTED': [],
+      'SELF_SEARCH_EFFICACY_SURVEY_COMPLETED': [],
+      'PRE_TASK_SURVEY_COMPLETED': [],
+      'SEARCH_TASK_COMMENCED': [],
+      'VIEW_SEARCH_BOX': [],
+      'SEARCH_TASK_VIEWED': [],
+      'VIEW_SAVED_DOCS': [],
+      'POST_TASK_SURVEY_COMPLETED': [],
+      'NASA_LOAD_SURVEY_STARTED': [],
+      'NASA_LOAD_SURVEY_COMPLETED': [],
+      'NASA_QUERY_LOAD_SURVEY_STARTED': [],
+      'NASA_QUERY_LOAD_SURVEY_COMPLETED': [],
+      'NASA_NAVIGATION_LOAD_SURVEY_STARTED': [],
+      'NASA_NAVIGATION_LOAD_SURVEY_COMPLETED': [],
+      'NASA_ASSESSMENT_LOAD_SURVEY_STARTED': [],
+      'NASA_ASSESSMENT_LOAD_SURVEY_COMPLETED': [],
+      'NASA_COMPARE_FACTORS_SURVEY_STARTED': [],
+      'NASA_COMPARE_FACTORS_SURVEY_COMPLETED': [],
+      'PERFORMANCE': [],
+      'DOC_MARKED_NONRELEVANT': DOCUMENT_EVENT_PARAMS,
+      'QUERY_SUGGESTION_ISSUED': ALT_QUERY_EVENT_PARAMS,
+      'QUERY_ISSUED': ALT_QUERY_EVENT_PARAMS
+  })
 
-  CSV_EXPORT_FIELDS = ['record_id', 'timestamp', 'session', 'topic', 'condition', 'action_type', 'query', 'result_page', 'document', 'rank', 'user_relevance_score']
+  CSV_EXPORT_FIELDS = ['record_id', 'timestamp', 'session', 'topic', 'condition', 'action_type', 'query', 'result_page',
+                       'document', 'rank', 'user_relevance_score']
 
   type_dict = {}
 
   global_highest_rank = 0
 
   @classmethod
-  def __index_by_type( cls, action ):
-    if not action.action_type in cls.type_dict:
-      cls.type_dict[ action.action_type ] = []
-    cls.type_dict[ action.action_type ].append( action )
+  def __index_by_type(cls, action):
+    if action.action_type not in cls.type_dict:
+      cls.type_dict[action.action_type] = []
+    cls.type_dict[action.action_type].append(action)
 
   @classmethod
-  def by_type( cls, type ):
-    return cls.type_dict.get( type )
+  def by_type(cls, type):
+    return cls.type_dict.get(type)
 
   @classmethod
   def filter_by_type( cls, type, filter_func ):
@@ -177,16 +178,26 @@ class Action(DataRecord, Filterable):
     return self.document.is_relevant_for_topic( self.session.topic )
 
   def gain( self, gain_levels ):
-    # Only doc-marked-relevant events can affect gain
-    if self.action_type != 'DOC_MARKED_RELEVANT':
-      return 0
+    # Only doc-marked-relevant events can affect gain(
+        if self.action_type != 'DOC_MARKED_RELEVANT':
+          return 0
 
-    try:
-      if self.document_is_moderately_relevant():
-        return int(gain_levels[1])
-      elif self.document_is_highly_relevant():
-        return int(gain_levels[2])
-      else:
-        return int(gain_levels[0])
-    except RuntimeError as e:
-      raise RuntimeError("No gain could be inferred for doc-marked-relevant event at %s, query id %s: %s" % (self.timestamp, self.query.record_id, e))
+        try:
+          if self.document_is_moderately_relevant():
+            return int(gain_levels[1])
+          elif self.document_is_highly_relevant():
+            return int(gain_levels[2])
+          else:
+            return int(gain_levels[0])
+        except RuntimeError as e:
+          raise RuntimeError("No gain could be inferred for doc-marked-relevant event at %s, query id %s: %s" % (self.timestamp, self.query.record_id, e))
+
+  def incidence_of_document(self):
+    return self.session.incidence_of(self.document, self.query)
+
+  def read_incidence_of_document(self):
+    previous_read_actions_of_current_document = self.session.actions_by_filter_before_action(
+        lambda a: a.action_type == 'DOC_MARKED_VIEWED' and a.document == self.document,
+        self
+    )
+    return len(previous_read_actions_of_current_document) + 1
