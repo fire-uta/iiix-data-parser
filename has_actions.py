@@ -149,7 +149,8 @@ class HasActions:
           'rank': rank,
           'continuous_rank': action.query.continuous_rank_at(rank) if rank is not None else None,
           'query_order_number': action.query.order_number(),
-          'document_incidence': action.session.incidence_of(document, action.query)
+          'document_incidence': action.incidence_of_document(),
+          'read_incidence': action.read_incidence_of_document()
       })
     return mark_events
 

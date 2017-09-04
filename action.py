@@ -15,6 +15,8 @@ def should_use_alt_params():
 
 class Action(DataRecord, Filterable):
 
+  READ_ACTION_NAME = 'DOC_MARKED_VIEWED'
+
   DOCUMENT_EVENT_PARAMS = ['document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank']
   ALT_DOCUMENT_EVENT_PARAMS = ['document_id2', 'document_id', 'user_relevance_score', 'rank']
   QUERY_EVENT_PARAMS = ['query_id', 'query_text']
@@ -25,7 +27,6 @@ class Action(DataRecord, Filterable):
       'VIEW_SEARCH_RESULTS_PAGE': ['result_page'],
       'DOCUMENT_HOVER_IN': DOCUMENT_EVENT_PARAMS,
       'DOCUMENT_HOVER_OUT': DOCUMENT_EVENT_PARAMS,
-      'DOC_MARKED_VIEWED': DOCUMENT_EVENT_PARAMS,
       'DOC_MARKED_RELEVANT': DOCUMENT_EVENT_PARAMS,
       'QUERY_FOCUS': [],
       'NEXT_QUERY_ISSUED': QUERY_EVENT_PARAMS,
@@ -34,10 +35,11 @@ class Action(DataRecord, Filterable):
       'EXPERIMENT_TIMEOUT': [],
       'SEARCH_TASK_COMPLETED': []
   }
+  PARAMS[READ_ACTION_NAME] = DOCUMENT_EVENT_PARAMS
 
   ALT_PARAMS = PARAMS.copy()
+  ALT_PARAMS[READ_ACTION_NAME] = ALT_DOCUMENT_EVENT_PARAMS
   ALT_PARAMS.update({
-      'DOC_MARKED_VIEWED': ALT_DOCUMENT_EVENT_PARAMS,
       'DEMOGRAPHICS_SURVEY_STARTED': [],
       'DEMOGRAPHICS_SURVEY_COMPLETED': [],
       'SELF_SEARCH_EFFICACY_SURVEY_STARTED': [],
@@ -120,8 +122,8 @@ class Action(DataRecord, Filterable):
   def __index( self ):
     self.__class__.__index_by_type( self )
 
-  def __update_session( self ):
-    if self.action_type == 'DOC_MARKED_VIEWED':
+  def __update_session(self):
+    if self.action_type == Action.READ_ACTION_NAME:
       for doc_owner in self.__document_owners():
         doc_owner.add_viewed_documents( self.document )
 
@@ -148,12 +150,12 @@ class Action(DataRecord, Filterable):
     return []
 
   def viewed_documents(self):
-    if self.action_type == 'DOC_MARKED_VIEWED':
+    if self.action_type == Action.READ_ACTION_NAME:
       return [self.document]
     return []
 
   def seen_documents_since(self, rank):
-    if self.action_type == 'DOC_MARKED_VIEWED':
+    if self.action_type == Action.READ_ACTION_NAME:
       if int(self.rank) > 0:
         seen_results = self.query.results_between(rank, self.rank)
         return [result.document for result in seen_results]
@@ -197,7 +199,10 @@ class Action(DataRecord, Filterable):
 
   def read_incidence_of_document(self):
     previous_read_actions_of_current_document = self.session.actions_by_filter_before_action(
-        lambda a: a.action_type == 'DOC_MARKED_VIEWED' and a.document == self.document,
+        lambda a: a.is_read_event() and a.document == self.document,
         self
     )
-    return len(previous_read_actions_of_current_document) + 1
+    return len(previous_read_actions_of_current_document) + (1 if self.is_read_event() else 0)
+
+  def is_read_event(self):
+    return self.action_type == Action.READ_ACTION_NAME
