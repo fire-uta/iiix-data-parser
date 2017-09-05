@@ -16,6 +16,7 @@ def should_use_alt_params():
 class Action(DataRecord, Filterable):
 
   READ_ACTION_NAME = 'DOC_MARKED_VIEWED'
+  MARK_ACTION_NAME = 'DOC_MARKED_RELEVANT'
 
   DOCUMENT_EVENT_PARAMS = ['document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank']
   ALT_DOCUMENT_EVENT_PARAMS = ['document_id2', 'document_id', 'user_relevance_score', 'rank']
@@ -27,7 +28,6 @@ class Action(DataRecord, Filterable):
       'VIEW_SEARCH_RESULTS_PAGE': ['result_page'],
       'DOCUMENT_HOVER_IN': DOCUMENT_EVENT_PARAMS,
       'DOCUMENT_HOVER_OUT': DOCUMENT_EVENT_PARAMS,
-      'DOC_MARKED_RELEVANT': DOCUMENT_EVENT_PARAMS,
       'QUERY_FOCUS': [],
       'NEXT_QUERY_ISSUED': QUERY_EVENT_PARAMS,
       'NEXT_QUERY_FOCUS': [],
@@ -36,6 +36,7 @@ class Action(DataRecord, Filterable):
       'SEARCH_TASK_COMPLETED': []
   }
   PARAMS[READ_ACTION_NAME] = DOCUMENT_EVENT_PARAMS
+  PARAMS[MARK_ACTION_NAME] = DOCUMENT_EVENT_PARAMS
 
   ALT_PARAMS = PARAMS.copy()
   ALT_PARAMS[READ_ACTION_NAME] = ALT_DOCUMENT_EVENT_PARAMS
@@ -140,12 +141,12 @@ class Action(DataRecord, Filterable):
         for doc_owner in self.__document_owners():
           doc_owner.add_seen_documents( self.document )
 
-    elif self.action_type == 'DOC_MARKED_RELEVANT':
+    elif self.is_mark_event():
       for doc_owner in self.__document_owners():
         doc_owner.add_marked_relevant_documents( self.document )
 
   def marked_relevant_documents(self):
-    if self.action_type == 'DOC_MARKED_RELEVANT':
+    if self.is_mark_event():
       return [self.document]
     return []
 
@@ -181,7 +182,7 @@ class Action(DataRecord, Filterable):
 
   def gain( self, gain_levels ):
     # Only doc-marked-relevant events can affect gain(
-        if self.action_type != 'DOC_MARKED_RELEVANT':
+        if not self.is_mark_event():
           return 0
 
         try:
@@ -206,3 +207,13 @@ class Action(DataRecord, Filterable):
 
   def is_read_event(self):
     return self.action_type == Action.READ_ACTION_NAME
+
+  def mark_incidence_of_document(self):
+    previous_mark_actions_of_current_document = self.session.actions_by_filter_before_action(
+        lambda a: a.is_mark_event() and a.document == self.document,
+        self
+    )
+    return len(previous_mark_actions_of_current_document) + (1 if self.is_mark_event() else 0)
+
+  def is_mark_event(self):
+    return self.action_type == Action.MARK_ACTION_NAME

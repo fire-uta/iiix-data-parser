@@ -1,6 +1,9 @@
 from attr_utils import _memoize_attr
 
 
+from action import Action
+
+
 class HasActions:
   def add_actions(self, actions):
     if not hasattr(self, 'actions'):
@@ -89,16 +92,16 @@ class HasActions:
     return self.actions[-1].timestamp
 
   def document_read_actions(self):
-    return self.actions_by_type('DOC_MARKED_VIEWED')
+    return self.actions_by_type(Action.READ_ACTION_NAME)
 
   def document_read_actions_until(self, seconds):
-    return self.actions_by_type_until('DOC_MARKED_VIEWED', seconds)
+    return self.actions_by_type_until(Action.READ_ACTION_NAME, seconds)
 
   def document_marked_relevant_actions(self):
-    return self.actions_by_type('DOC_MARKED_RELEVANT')
+    return self.actions_by_type(Action.MARK_ACTION_NAME)
 
   def document_marked_relevant_actions_until(self, seconds):
-    return self.actions_by_type_until('DOC_MARKED_RELEVANT', seconds)
+    return self.actions_by_type_until(Action.MARK_ACTION_NAME, seconds)
 
   def document_read_times(self):
     read_times = {}
@@ -150,7 +153,8 @@ class HasActions:
           'continuous_rank': action.query.continuous_rank_at(rank) if rank is not None else None,
           'query_order_number': action.query.order_number(),
           'document_incidence': action.incidence_of_document(),
-          'read_incidence': action.read_incidence_of_document()
+          'read_incidence': action.read_incidence_of_document(),
+          'mark_incidence': action.mark_incidence_of_document()
       })
     return mark_events
 
