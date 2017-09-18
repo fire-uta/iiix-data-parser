@@ -158,6 +158,11 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
         break
     return total_count
 
+  def document_has_been_marked_relevant_before(self, document, action):
+    mark_actions_before_this = self.document_marked_relevant_actions_until(
+        self.seconds_elapsed_at(action.timestamp) - 0.001)
+    return document.record_id in [action.document.record_id for idx, action in mark_actions_before_this]
+
   @classmethod
   def average_document_reading_time_in_seconds_over(cls, sessions):
     reading_times = cls.document_reading_times_in_seconds_over(sessions)

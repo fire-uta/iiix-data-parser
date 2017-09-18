@@ -180,20 +180,23 @@ class Action(DataRecord, Filterable):
   def document_is_relevant( self ):
     return self.document.is_relevant_for_topic( self.session.topic )
 
-  def gain( self, gain_levels ):
+  def gain(self, gain_levels):
     # Only doc-marked-relevant events can affect gain(
-        if not self.is_mark_event():
-          return 0
+    if not self.is_mark_event():
+      return 0
+    if self.session.document_has_been_marked_relevant_before(self.document, self):
+      return 0
 
-        try:
-          if self.document_is_moderately_relevant():
-            return int(gain_levels[1])
-          elif self.document_is_highly_relevant():
-            return int(gain_levels[2])
-          else:
-            return int(gain_levels[0])
-        except RuntimeError as e:
-          raise RuntimeError("No gain could be inferred for doc-marked-relevant event at %s, query id %s: %s" % (self.timestamp, self.query.record_id, e))
+    try:
+      if self.document_is_moderately_relevant():
+        return int(gain_levels[1])
+      elif self.document_is_highly_relevant():
+        return int(gain_levels[2])
+      else:
+        return int(gain_levels[0])
+    except RuntimeError as e:
+      raise RuntimeError("No gain could be inferred for doc-marked-relevant event at %s, query id %s: %s" %
+                         (self.timestamp, self.query.record_id, e))
 
   def incidence_of_document(self):
     return self.session.incidence_of(self.document, self.query)
