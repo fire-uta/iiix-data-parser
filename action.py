@@ -206,7 +206,11 @@ class Action(DataRecord, Filterable):
         lambda a: a.is_read_event() and a.document == self.document and (not unique or a.query != self.query),
         self
     )
-    return len(previous_read_actions_of_current_document) + (1 if self.is_read_event() else 0)
+    previous_incidences_count = len(previous_read_actions_of_current_document)
+    if unique:
+      previous_read_action_queries = set(map(lambda a: a[1].query, previous_read_actions_of_current_document))
+      previous_incidences_count = len(previous_read_action_queries)
+    return previous_incidences_count + (1 if self.is_read_event() else 0)
 
   def unique_read_incidence_of_document(self):
     return self.read_incidence_of_document(unique=True)
@@ -219,7 +223,11 @@ class Action(DataRecord, Filterable):
         lambda a: a.is_mark_event() and a.document == self.document and (not unique or a.query != self.query),
         self
     )
-    return len(previous_mark_actions_of_current_document) + (1 if self.is_mark_event() else 0)
+    previous_incidences_count = len(previous_mark_actions_of_current_document)
+    if unique:
+      previous_mark_action_queries = set(map(lambda a: a[1].query, previous_mark_actions_of_current_document))
+      previous_incidences_count = len(previous_mark_action_queries)
+    return previous_incidences_count + (1 if self.is_mark_event() else 0)
 
   def unique_mark_incidence_of_document(self):
     return self.mark_incidence_of_document(unique=True)

@@ -77,3 +77,11 @@ class QueryResultList:
       if result_document.document.record_id == document.record_id:
         return result_document.rank
     return None
+
+  def result_document_clicked(self, result_document):
+    # NOTE: assumes that a document can only exist once in a result list
+    return self.query.has_been_viewed(result_document.document)
+
+  def result_document_marked(self, result_document):
+    # NOTE: assumes that a document can only exist once in a result list
+    return self.query.has_been_marked(result_document.document)

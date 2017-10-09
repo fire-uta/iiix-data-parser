@@ -64,6 +64,9 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
   def highly_relevant_results(self):
     return self.highly_relevant_results_up_to_rank(self.last_rank_reached())
 
+  def result_at(self, rank):
+    return self.result_list.result_documents[rank - 1]
+
   def results_between(self, rank_start, rank_end):
     result_length = self.result_list.length()
     if int(rank_start) < 1 or int(rank_start) > result_length or int(rank_end) < 1 or int(rank_end) > result_length or int(rank_start) > int(rank_end):

@@ -123,8 +123,10 @@ class HasActions:
         continue
       document = action.document
       rank = action.query.rank_of(document)
+      result = action.query.result_at(rank) if rank is not None else None
       read_events.append({
           'document': document,
+          'result': result,
           'read_duration': action_duration,
           'read_start_at_seconds': self.seconds_elapsed_at(action.timestamp),
           'rank': rank,

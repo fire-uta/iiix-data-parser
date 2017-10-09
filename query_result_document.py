@@ -33,3 +33,9 @@ class QueryResultDocument:
 
   def mark_start_at_from_session_start_seconds(self):
     return self.result_list.result_document_mark_start_at_from_session_start_seconds(self)
+
+  def has_been_viewed(self):
+    return self.result_list.result_document_clicked(self)
+
+  def has_been_marked(self):
+    return self.result_list.result_document_marked(self)

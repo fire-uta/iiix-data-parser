@@ -33,6 +33,7 @@ def export_read_events_as_csv(sessions, file_name, gains):
     writer.writeheader()
     for session in sessions:
       for read_event in session.document_read_events():
+        result = read_event['result']
         writer.writerow({
             'session_id': session.record_id,
             'topic': session.topic.record_id,
@@ -42,8 +43,8 @@ def export_read_events_as_csv(sessions, file_name, gains):
             'read_duration': read_event['read_duration'],
             'relevance': read_event['document'].get_relevance_for_topic(session.topic).relevance_level,
             'gain_at_read_start': session.cumulated_gain_at(read_event['read_start_at_seconds'], gains),
-            'marked?': (1 if session.has_been_marked(read_event['document']) else 0),
-            'marked_at': session.document_mark_start_at_seconds(read_event['document']),
+            'marked?': ((1 if result.has_been_marked() else 0) if result is not None else None),
+            'marked_at': (result.mark_start_at_from_session_start_seconds() if result is not None else None),
             'rank': read_event['rank'],
             'continuous_rank': read_event['continuous_rank'],
             'query_order_num': read_event['query_order_number'],
@@ -133,9 +134,10 @@ def export_marked_relevant_events_as_csv(sessions, file_name, gains):
 def export_scanned_documents_as_csv(sessions, file_name, gains):
   with open(file_name, 'w') as export_file:
     field_names = ['session_id', 'topic', 'condition', 'query_id', 'rank', 'document_id', 'relevance', 'clicked?',
-                   'marked?', 'first_encountered', 'clicked_at', 'marked_at', 'continuous_rank', 'query_order_nr',
-                   'gain_after_marking', 'cumulated_scan_count_nr_inc1', 'cumulated_scan_count_nr_inc2+',
-                   'cumulated_scan_count_r_inc1', 'cumulated_scan_count_r_inc2+', 'document_incidence']
+                   'marked?', 'first_encountered', 'clicked_at', 'marked_at',
+                   'continuous_rank', 'query_order_nr', 'gain_after_marking', 'cumulated_scan_count_nr_inc1',
+                   'cumulated_scan_count_nr_inc2+', 'cumulated_scan_count_r_inc1', 'cumulated_scan_count_r_inc2+',
+                   'document_incidence']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
     writer.writeheader()
     for session in sessions:
@@ -156,8 +158,8 @@ def export_scanned_documents_as_csv(sessions, file_name, gains):
               'rank': result_document.rank,
               'document_id': document.record_id,
               'relevance': relevance.relevance_level if relevance is not None else None,
-              'marked?': (1 if query.has_been_marked(document) else 0),
-              'clicked?': (1 if query.has_been_viewed(document) else 0),
+              'marked?': (1 if result_document.has_been_marked() else 0),
+              'clicked?': (1 if result_document.has_been_viewed() else 0),
               'first_encountered': result_document.first_encountered_at_from_session_start_seconds(),
               'clicked_at': result_document.read_start_at_from_session_start_seconds(),
               'marked_at': result_document.mark_start_at_from_session_start_seconds(),
