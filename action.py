@@ -201,22 +201,28 @@ class Action(DataRecord, Filterable):
   def incidence_of_document(self):
     return self.session.incidence_of(self.document, self.query)
 
-  def read_incidence_of_document(self):
+  def read_incidence_of_document(self, unique=False):
     previous_read_actions_of_current_document = self.session.actions_by_filter_before_action(
-        lambda a: a.is_read_event() and a.document == self.document,
+        lambda a: a.is_read_event() and a.document == self.document and (not unique or a.query != self.query),
         self
     )
     return len(previous_read_actions_of_current_document) + (1 if self.is_read_event() else 0)
 
+  def unique_read_incidence_of_document(self):
+    return self.read_incidence_of_document(unique=True)
+
   def is_read_event(self):
     return self.action_type == Action.READ_ACTION_NAME
 
-  def mark_incidence_of_document(self):
+  def mark_incidence_of_document(self, unique=False):
     previous_mark_actions_of_current_document = self.session.actions_by_filter_before_action(
-        lambda a: a.is_mark_event() and a.document == self.document,
+        lambda a: a.is_mark_event() and a.document == self.document and (not unique or a.query != self.query),
         self
     )
     return len(previous_mark_actions_of_current_document) + (1 if self.is_mark_event() else 0)
+
+  def unique_mark_incidence_of_document(self):
+    return self.mark_incidence_of_document(unique=True)
 
   def is_mark_event(self):
     return self.action_type == Action.MARK_ACTION_NAME

@@ -28,7 +28,7 @@ def export_read_events_as_csv(sessions, file_name, gains):
                    'cumulated_read_count_r_inc1', 'cumulated_read_count_r_inc2+',
                    'cumulated_scan_count_nr_inc1', 'cumulated_scan_count_nr_inc2+',
                    'cumulated_scan_count_r_inc1', 'cumulated_scan_count_r_inc2+',
-                   'document_incidence', 'read_incidence']
+                   'document_incidence', 'read_incidence', 'read_incidence_unique']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
     writer.writeheader()
     for session in sessions:
@@ -56,7 +56,8 @@ def export_read_events_as_csv(sessions, file_name, gains):
             'cumulated_scan_count_r_inc1': session.results_count_at_rank(read_event['continuous_rank'], relevance_level_match=lambda r: r >= 1, incidence_match=lambda i: i == 1),
             'cumulated_scan_count_r_inc2+': session.results_count_at_rank(read_event['continuous_rank'], relevance_level_match=lambda r: r >= 1, incidence_match=lambda i: i >= 2),
             'document_incidence': read_event['document_incidence'],
-            'read_incidence': read_event['read_incidence']
+            'read_incidence': read_event['read_incidence'],
+            'read_incidence_unique': read_event['read_incidence_unique']
         })
 
 
@@ -95,7 +96,8 @@ def export_marked_relevant_events_as_csv(sessions, file_name, gains):
                    'cumulated_mark_count_r_inc1', 'cumulated_mark_count_r_inc2+',
                    'cumulated_read_count_nr_inc1', 'cumulated_read_count_nr_inc2+',
                    'cumulated_read_count_r_inc1', 'cumulated_read_count_r_inc2+',
-                   'document_incidence', 'read_incidence', 'mark_incidence']
+                   'document_incidence', 'read_incidence', 'mark_incidence',
+                   'read_incidence_unique', 'mark_incidence_unique']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
     writer.writeheader()
     for session in sessions:
@@ -123,6 +125,8 @@ def export_marked_relevant_events_as_csv(sessions, file_name, gains):
             'document_incidence': mark_event['document_incidence'],
             'read_incidence': mark_event['read_incidence'],
             'mark_incidence': mark_event['mark_incidence'],
+            'read_incidence_unique': mark_event['read_incidence_unique'],
+            'mark_incidence_unique': mark_event['mark_incidence_unique']
         })
 
 

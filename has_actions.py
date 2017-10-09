@@ -132,7 +132,8 @@ class HasActions:
           'continuous_rank': action.query.continuous_rank_at(rank) if rank is not None else None,
           'query_order_number': action.query.order_number(),
           'document_incidence': action.incidence_of_document(),
-          'read_incidence': action.read_incidence_of_document()
+          'read_incidence': action.read_incidence_of_document(),
+          'read_incidence_unique': action.unique_read_incidence_of_document()
       })
     return read_events
 
@@ -154,7 +155,9 @@ class HasActions:
           'query_order_number': action.query.order_number(),
           'document_incidence': action.incidence_of_document(),
           'read_incidence': action.read_incidence_of_document(),
-          'mark_incidence': action.mark_incidence_of_document()
+          'mark_incidence': action.mark_incidence_of_document(),
+          'read_incidence_unique': action.unique_read_incidence_of_document(),
+          'mark_incidence_unique': action.unique_mark_incidence_of_document()
       })
     return mark_events
 
