@@ -74,6 +74,10 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
     read_actions = self.document_read_actions_until(seconds)
     return len(list(filter(lambda action: relevance_level_match(action[1].document.get_relevance_for_topic(self.topic).relevance_level) and incidence_match(self.incidence_of(action[1].document, action[1].query)), read_actions)))
 
+  def cumulated_read_count_before_rank(self, rank, relevance_level_match=lambda r: True, incidence_match=lambda i: True):
+    read_actions = self.document_read_actions_before_rank(rank)
+    return len(list(filter(lambda action: relevance_level_match(action[1].document.get_relevance_for_topic(self.topic).relevance_level) and incidence_match(self.incidence_of(action[1].document, action[1].query)), read_actions)))
+
   def cumulated_non_relevant_read_count_at(self, seconds):
     read_actions = self.document_read_actions_until(seconds)
     return len(list(filter(lambda action: action[1].document.is_not_relevant_for_topic(self.topic), read_actions)))
@@ -88,6 +92,10 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
 
   def cumulated_mark_count_at(self, seconds, relevance_level_match=lambda r: True, incidence_match=lambda i: True):
     mark_actions = self.document_marked_relevant_actions_until(seconds)
+    return len(list(filter(lambda action: relevance_level_match(action[1].document.get_relevance_for_topic(self.topic).relevance_level) and incidence_match(self.incidence_of(action[1].document, action[1].query)), mark_actions)))
+
+  def cumulated_mark_count_before_rank(self, rank, relevance_level_match=lambda r: True, incidence_match=lambda i: True):
+    mark_actions = self.document_marked_relevant_actions_before_rank(rank)
     return len(list(filter(lambda action: relevance_level_match(action[1].document.get_relevance_for_topic(self.topic).relevance_level) and incidence_match(self.incidence_of(action[1].document, action[1].query)), mark_actions)))
 
   def cumulated_non_relevant_mark_count_at(self, seconds):

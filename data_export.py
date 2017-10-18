@@ -137,7 +137,8 @@ def export_scanned_documents_as_csv(sessions, file_name, gains):
                    'marked?', 'first_encountered', 'clicked_at', 'marked_at',
                    'continuous_rank', 'query_order_nr', 'gain_after_marking', 'cumulated_scan_count_nr_inc1',
                    'cumulated_scan_count_nr_inc2+', 'cumulated_scan_count_r_inc1', 'cumulated_scan_count_r_inc2+',
-                   'document_incidence']
+                   'cumulated_read_count_before_nr', 'cumulated_read_count_before_r',
+                   'cumulated_mark_count_before_nr', 'cumulated_mark_count_before_r', 'document_incidence']
     writer = csv.DictWriter(export_file, fieldnames=field_names)
     writer.writeheader()
     for session in sessions:
@@ -170,6 +171,10 @@ def export_scanned_documents_as_csv(sessions, file_name, gains):
               'cumulated_scan_count_nr_inc2+': session.results_count_at_rank(continuous_rank, relevance_level_match=lambda r: r == 0, incidence_match=lambda i: i >= 2),
               'cumulated_scan_count_r_inc1': session.results_count_at_rank(continuous_rank, relevance_level_match=lambda r: r >= 1, incidence_match=lambda i: i == 1),
               'cumulated_scan_count_r_inc2+': session.results_count_at_rank(continuous_rank, relevance_level_match=lambda r: r >= 1, incidence_match=lambda i: i >= 2),
+              'cumulated_read_count_before_nr': session.cumulated_read_count_before_rank(continuous_rank, relevance_level_match=lambda r: r == 0),
+              'cumulated_read_count_before_r': session.cumulated_read_count_before_rank(continuous_rank, relevance_level_match=lambda r: r >= 1),
+              'cumulated_mark_count_before_nr': session.cumulated_mark_count_before_rank(continuous_rank, relevance_level_match=lambda r: r == 0),
+              'cumulated_mark_count_before_r': session.cumulated_mark_count_before_rank(continuous_rank, relevance_level_match=lambda r: r >= 1),
               'document_incidence': session.incidence_of(document, query)
           })
 

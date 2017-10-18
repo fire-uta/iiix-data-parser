@@ -1,3 +1,6 @@
+import sys
+
+
 from attr_utils import _memoize_attr
 
 
@@ -11,6 +14,14 @@ class HasActions:
     self.actions.extend(actions)
     self.actions = sorted(self.actions, key=lambda action: action.timestamp)
 
+  def actions_in_continuous_rank_order(self):
+    # FIXME: multiplying query order nr by 1M is just a silly hack
+    return _memoize_attr(self, '_actions_in_continuous_rank_order',
+                         lambda: sorted(self.actions,
+                                        key=lambda action:
+                                        action.query.order_number() * 1000000 + int(getattr(
+                                            action, 'rank', sys.maxsize))))
+
   def actions_by_type(self, action_type):
     return self.actions_by_filter(lambda a: a.action_type == action_type)
 
@@ -21,16 +32,36 @@ class HasActions:
         lambda: self._calculate_actions_by_type_until(action_type, seconds)
     )
 
+  def actions_by_type_before_rank(self, action_type, rank):
+    return _memoize_attr(
+        self,
+        '_actions_by_' + str(action_type) + '_type_before_rank_' + str(rank),
+        lambda: self._calculate_actions_by_type_before_rank(action_type, rank)
+    )
+
   def actions_by_filter(self, filter_func=lambda a: False):
     return [(idx, action) for idx, action in enumerate(self.actions) if filter_func(action)]
 
   def _calculate_actions_by_type_until(self, action_type, seconds):
     return self._calculate_actions_by_filter_until(lambda a: a.action_type == action_type, seconds)
 
+  def _calculate_actions_by_type_before_rank(self, action_type, rank):
+    return self._calculate_actions_by_filter_before_rank(lambda a: a.action_type == action_type, rank)
+
   def _calculate_actions_by_filter_until(self, filter_func=lambda a: False, seconds=0):
     actions = []
     for idx, action in enumerate(self.actions):
       if self.seconds_elapsed_at(action.timestamp) > seconds:
+        break
+      if filter_func(action):
+        actions.append((idx, action))
+    return actions
+
+  def _calculate_actions_by_filter_before_rank(self, filter_func=lambda a: False, rank=0):
+    actions = []
+    for idx, action in enumerate(self.actions_in_continuous_rank_order()):
+      # NOTE: not all actions have a rank, so we need to skip actions with no rank
+      if hasattr(action, 'rank') and action.query.continuous_rank_at(int(action.rank)) > rank:
         break
       if filter_func(action):
         actions.append((idx, action))
@@ -97,11 +128,17 @@ class HasActions:
   def document_read_actions_until(self, seconds):
     return self.actions_by_type_until(Action.READ_ACTION_NAME, seconds)
 
+  def document_read_actions_before_rank(self, rank):
+    return self.actions_by_type_before_rank(Action.READ_ACTION_NAME, rank)
+
   def document_marked_relevant_actions(self):
     return self.actions_by_type(Action.MARK_ACTION_NAME)
 
   def document_marked_relevant_actions_until(self, seconds):
     return self.actions_by_type_until(Action.MARK_ACTION_NAME, seconds)
+
+  def document_marked_relevant_actions_before_rank(self, rank):
+    return self.actions_by_type_before_rank(Action.MARK_ACTION_NAME, rank)
 
   def document_read_times(self):
     read_times = {}
