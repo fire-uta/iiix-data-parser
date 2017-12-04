@@ -2,6 +2,7 @@ from data_record import DataRecord
 from document import Document
 from filterable import Filterable
 from cli import CLI
+import parser
 
 
 def get_cli_options():
@@ -13,10 +14,15 @@ def should_use_alt_params():
   return get_cli_options().use_alt_log_format
 
 
+def serp_len():
+  return parser.serp_len()
+
+
 class Action(DataRecord, Filterable):
 
   READ_ACTION_NAME = 'DOC_MARKED_VIEWED'
   MARK_ACTION_NAME = 'DOC_MARKED_RELEVANT'
+  SERP_SWITCH_ACTION_NAME = 'VIEW_SEARCH_RESULTS_PAGE'
 
   DOCUMENT_EVENT_PARAMS = ['document_id2', 'document_id', 'document_id3', 'user_relevance_score', 'rank']
   ALT_DOCUMENT_EVENT_PARAMS = ['document_id2', 'document_id', 'user_relevance_score', 'rank']
@@ -25,7 +31,6 @@ class Action(DataRecord, Filterable):
 
   PARAMS = {
       'QUERY_ISSUED': QUERY_EVENT_PARAMS,
-      'VIEW_SEARCH_RESULTS_PAGE': ['result_page'],
       'DOCUMENT_HOVER_IN': DOCUMENT_EVENT_PARAMS,
       'DOCUMENT_HOVER_OUT': DOCUMENT_EVENT_PARAMS,
       'QUERY_FOCUS': [],
@@ -37,6 +42,7 @@ class Action(DataRecord, Filterable):
   }
   PARAMS[READ_ACTION_NAME] = DOCUMENT_EVENT_PARAMS
   PARAMS[MARK_ACTION_NAME] = DOCUMENT_EVENT_PARAMS
+  PARAMS[SERP_SWITCH_ACTION_NAME] = ['result_page']
 
   ALT_PARAMS = PARAMS.copy()
   ALT_PARAMS[READ_ACTION_NAME] = ALT_DOCUMENT_EVENT_PARAMS
@@ -89,7 +95,7 @@ class Action(DataRecord, Filterable):
     actions_by_type = cls.by_type( type )
     return list(filter( filter_func, actions_by_type ))
 
-  def __init__(self, timestamp, condition, session, action_type, query, action_parameters):
+  def __init__(self, timestamp, condition, session, action_type, query, action_parameters, serp_page_num=None):
     DataRecord.__init__(self, session.record_id + '-' + str(timestamp))
     self.timestamp = timestamp
     self.session = session
@@ -98,6 +104,7 @@ class Action(DataRecord, Filterable):
     self.action_type = action_type
     self.query = query
     self.bare_action_parameters = action_parameters
+    self.serp_page_num = serp_page_num
     self.__parse_action_parameters()
     self.__update_session()
     self.__update_global_stats()
@@ -116,6 +123,9 @@ class Action(DataRecord, Filterable):
       setattr(self, param_name, param_value)
     self.__init_action_parameter_objects()
 
+    if self.is_serp_switch_event():
+      self.serp_page_num = self.result_page
+
   def __init_action_parameter_objects(self):
     if hasattr(self, 'document_id'):
       self.document = Document.create_or_update( self.document_id )
@@ -124,26 +134,36 @@ class Action(DataRecord, Filterable):
     self.__class__.__index_by_type( self )
 
   def __update_session(self):
-    if self.action_type == Action.READ_ACTION_NAME:
+    if self.is_read_event():
       for doc_owner in self.__document_owners():
-        doc_owner.add_viewed_documents( self.document )
-
-      # FIXME: THIS IS A HACK BECAUSE RANK CAN SOMETIMES BE UNKNOWN, AND IS MARKED WITH -1
-      if int(self.rank) > 0:
-        try:
-          seen_results = self.query.results_up_to_rank( self.rank )
-          seen_docs = [result.document for result in seen_results]
-          for doc_owner in self.__document_owners():
-            doc_owner.add_seen_documents( *seen_docs )
-        except RuntimeError as e:
-          raise RuntimeError( "Action at %s caused error: %s" % ( self.timestamp, e ) )
-      else:
-        for doc_owner in self.__document_owners():
-          doc_owner.add_seen_documents( self.document )
-
+        doc_owner.add_viewed_documents(self.document)
+      self.__update_seen_documents_on_read()
     elif self.is_mark_event():
       for doc_owner in self.__document_owners():
-        doc_owner.add_marked_relevant_documents( self.document )
+        doc_owner.add_marked_relevant_documents(self.document)
+    elif self.is_serp_switch_event():
+      last_rank_seen = (int(self.result_page) - 1) * serp_len()
+      results_seen_by_now = self.query.results_up_to_rank(last_rank_seen) if last_rank_seen > 0 else []
+      docs_seen_by_now = [result.document for result in results_seen_by_now]
+      for doc_owner in self.__document_owners():
+        doc_owner.add_seen_documents(*docs_seen_by_now)
+
+  def __update_seen_documents_on_read(self):
+    # FIXME: Query#_calculate_last_rank_reached uses the highest rank in any
+    # action as the last rank reached. There's a mismatch here.
+
+    # FIXME: THIS IS A HACK DUE TO RANK SOMETIMES BEING UNKNOWN, MARKED WITH -1
+    if int(self.rank) > 0:
+      try:
+        seen_results = self.query.results_up_to_rank(self.rank)
+        seen_docs = [result.document for result in seen_results]
+        for doc_owner in self.__document_owners():
+          doc_owner.add_seen_documents(*seen_docs)
+      except RuntimeError as e:
+        raise RuntimeError("Action at %s caused error: %s" % (self.timestamp, e))
+    else:
+      for doc_owner in self.__document_owners():
+        doc_owner.add_seen_documents(self.document)
 
   def marked_relevant_documents(self):
     if self.is_mark_event():
@@ -234,3 +254,6 @@ class Action(DataRecord, Filterable):
 
   def is_mark_event(self):
     return self.action_type == Action.MARK_ACTION_NAME
+
+  def is_serp_switch_event(self):
+    return self.action_type == Action.SERP_SWITCH_ACTION_NAME

@@ -118,7 +118,8 @@ class ActsAsSession(HasActions, HasQueries, HasDocuments):
     for query in self.sorted_queries():
       if query.continuous_rank_at_end() < rank:
         total_count += len(list(filter(lambda result_document: incidence_match(self.incidence_of(result_document.document, query)), query.results_of_relevance_level(relevance_level_match))))
-        remain -= query.last_rank_reached()
+        last_rank_reached = query.last_rank_reached()
+        remain -= (0 if last_rank_reached is None else last_rank_reached)
       else:
         total_count += len(list(filter(lambda result_document: incidence_match(self.incidence_of(result_document.document, query)), query.results_up_to_rank(remain, relevance_level_match=relevance_level_match))))
         break

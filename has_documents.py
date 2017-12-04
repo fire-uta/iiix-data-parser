@@ -12,7 +12,7 @@ class HasDocuments:
 
   def add_seen_documents(self, *documents):
     for document in documents:
-      self.seen_documents[ document.record_id ] = document
+      self.seen_documents[document.record_id] = document
 
   def add_viewed_documents( self, *documents ):
     for document in documents:

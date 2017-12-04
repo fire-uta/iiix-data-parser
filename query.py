@@ -11,6 +11,7 @@ from has_actions import HasActions
 from session import Session
 from filterable import Filterable
 from has_documents import HasDocuments
+from action import Action
 
 
 from attr_utils import _memoize_attr
@@ -45,7 +46,10 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
     return self.result_list.non_relevant_results_up_to_rank(rank)
 
   def results_of_relevance_level(self, relevance_level_match):
-    return self.results_up_to_rank(self.last_rank_reached(), relevance_level_match=relevance_level_match)
+    last_rank_reached = self.last_rank_reached()
+    if last_rank_reached is None:
+      return []
+    return self.results_up_to_rank(last_rank_reached, relevance_level_match=relevance_level_match)
 
   def non_relevant_results(self):
     return self.non_relevant_results_up_to_rank(self.last_rank_reached())
@@ -105,13 +109,8 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
     )
 
   def _calculate_last_rank_reached(self):
-    current_rank_candidate = 1
-    for action in reversed(self.actions):
-      if hasattr(action, 'rank') and int(action.rank) > current_rank_candidate:
-        current_rank_candidate = int(action.rank)
-    # Note that this may also return one if there were no actions with a rank.
-    # That means the user bailed without doing anything, so it counts as rank 1.
-    return current_rank_candidate
+    seen_docs_count = len(self.seen_documents)
+    return None if seen_docs_count == 0 else seen_docs_count
 
   def amount_of_non_relevant_documents_seen_at_last_rank(self):
     return len(self.non_relevant_documents_seen_at_last_rank())
@@ -145,17 +144,36 @@ class Query(DataRecord, HasActions, Filterable, HasDocuments):
 
   def continuous_rank_at(self, rank):
     prior_queries = self.session.queries_prior_to(self)
-    prior_last_ranks = [query.last_rank_reached() for query in prior_queries]
+    prior_last_ranks = map(lambda lr: 0 if lr is None else lr, [query.last_rank_reached() for query in prior_queries])
     return sum(prior_last_ranks) + rank
 
   def continuous_rank_at_end(self):
-    return self.continuous_rank_at(self.last_rank_reached())
+    last_rank_reached = self.last_rank_reached()
+    return self.continuous_rank_at(0 if last_rank_reached is None else last_rank_reached)
 
   def order_number(self):
     return self.session.sorted_queries().index(self) + 1
 
   def rank_of(self, document):
     return self.result_list.rank_of(document)
+
+  def never_switched_from_first_serp(self):
+    return len(self.serp_views_after_first()) == 0
+
+  def serp_views_after_first(self):
+    return self.actions_by_filter(lambda a: a.action_type == Action.SERP_SWITCH_ACTION_NAME and int(a.result_page) > 1, plain_actions=True)
+
+  def serp_views(self):
+    return self.actions_by_filter(lambda a: a.action_type == Action.SERP_SWITCH_ACTION_NAME, plain_actions=True)
+
+  def last_serp_number(self):
+    return max([int(a.result_page) for a in self.serp_views()])
+
+  def last_serp_actions(self, plain_actions=True):
+    return self.actions_by_filter(lambda a: a.serp_page_num == self.last_serp_number(), plain_actions=plain_actions)
+
+  def no_document_actions_on_last_serp(self):
+    return len(list(filter(lambda a: a.is_read_event() or a.is_mark_event(), self.last_serp_actions()))) == 0
 
   @classmethod
   def average_formulation_time_in_seconds(cls, filter_func = lambda query: True):

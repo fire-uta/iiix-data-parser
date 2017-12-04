@@ -47,6 +47,10 @@ class DataRecord:
     return cls.store
 
   @classmethod
+  def count(cls):
+    return len(cls.get_store().keys())
+
+  @classmethod
   def all(cls):
     return cls.get_store().values()
 

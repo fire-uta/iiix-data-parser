@@ -31,6 +31,7 @@ class CombinedLogFile(DataFile):
   def __parse( self ):
     actions = []
     query_text = None
+    serp_page_num = None
     with open( self.file_name, 'r' ) as log_file:
       for line in log_file:
           parsed_line = _parse_line( line )
@@ -42,6 +43,7 @@ class CombinedLogFile(DataFile):
           if parsed_line['action'] == 'QUERY_ISSUED' or parsed_line['action'] == 'QUERY_SUGGESTION_ISSUED':
             self.query_counter += 1
             query_text = parsed_line.get('action_parameters', None)
+            serp_page_num = None
             #print ("%s - %s - X - %s: %s" % (self.query_counter, parsed_line['user_id'], parsed_line['topic_id'], query_text))
 
           topic = Topic.create_or_update( parsed_line['topic_id'] )
@@ -59,8 +61,10 @@ class CombinedLogFile(DataFile):
           timestamp = _parse_datetime( parsed_line['date'], parsed_line['time'] )
           action = Action( timestamp = timestamp, session = session,
             condition = condition, action_type = parsed_line['action'],
-            query = query,
+            query = query, serp_page_num=serp_page_num,
             action_parameters = parsed_line.get('action_parameters', None) )
+          if action.is_serp_switch_event():
+            serp_page_num = int(action.result_page)
           actions.append( action )
 
           topic.add_actions( [action] )

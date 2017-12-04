@@ -12,6 +12,8 @@ class QueryResultList:
     self.result_documents.insert( int(rank) - 1, QueryResultDocument( self, rank, document ) )
 
   def results_up_to_rank(self, rank, relevance_level_match=lambda r: True):
+    if rank is None:
+      return []
     return filter(lambda result_document: relevance_level_match(result_document.get_relevance_for_topic(self.query.topic).relevance_level), self.result_documents[:int(rank)])
 
   def non_relevant_results_up_to_rank(self, rank):

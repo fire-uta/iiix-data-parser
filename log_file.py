@@ -38,20 +38,23 @@ class LogFile(DataFile):
     self.session.add_actions( self.actions )
     self.session.add_query( self.query )
 
-  def __parse( self ):
+  def __parse(self):
     actions = []
-    with open( self.file_name, 'r' ) as log_file:
+    with open(self.file_name, 'r') as log_file:
+      serp_page_num = None
       for line in log_file:
-          parsed_line = _parse_line( line )
+          parsed_line = _parse_line(line)
           condition = self.condition
-          timestamp = _parse_datetime( parsed_line['date'], parsed_line['time'] )
-          action = Action( timestamp = timestamp, session = self.session,
-            condition = condition, action_type = parsed_line['action'],
-            query = self.query,
-            action_parameters = parsed_line.get('action_parameters', None) )
-          actions.append( action )
+          timestamp = _parse_datetime(parsed_line['date'], parsed_line['time'])
+          action = Action(timestamp=timestamp, session=self.session,
+                          condition=condition, action_type=parsed_line['action'],
+                          query=self.query, serp_page_num=serp_page_num,
+                          action_parameters=parsed_line.get('action_parameters', None))
+          if action.is_serp_switch_event():
+            serp_page_num = int(action.result_page)
+          actions.append(action)
 
-    return sorted(actions, key = lambda action: action.timestamp)
+    return sorted(actions, key=lambda action: action.timestamp)
 
   def __create_or_update_session( self ):
     session_id = Session.build_session_id( self.user.record_id,

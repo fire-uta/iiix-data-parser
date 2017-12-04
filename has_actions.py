@@ -39,8 +39,8 @@ class HasActions:
         lambda: self._calculate_actions_by_type_before_rank(action_type, rank)
     )
 
-  def actions_by_filter(self, filter_func=lambda a: False):
-    return [(idx, action) for idx, action in enumerate(self.actions) if filter_func(action)]
+  def actions_by_filter(self, filter_func=lambda a: False, plain_actions=False):
+    return [action if plain_actions else (idx, action) for idx, action in enumerate(self.actions) if filter_func(action)]
 
   def _calculate_actions_by_type_until(self, action_type, seconds):
     return self._calculate_actions_by_filter_until(lambda a: a.action_type == action_type, seconds)
@@ -121,6 +121,9 @@ class HasActions:
     if len(self.actions) == 0:
       return None
     return self.actions[-1].timestamp
+
+  def serp_switch_actions(self):
+    return self.actions_by_type(Action.SERP_SWITCH_ACTION_NAME)
 
   def document_read_actions(self):
     return self.actions_by_type(Action.READ_ACTION_NAME)

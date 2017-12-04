@@ -7,7 +7,6 @@ import numpy
 from result_file import ResultFile
 from queries_summary_file import QueriesSummaryFile
 from log_file import LogFile
-from combined_log_file import CombinedLogFile
 from document import Document
 from query import Query
 from topic import Topic
