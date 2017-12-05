@@ -24,6 +24,7 @@ from relevance import Relevance
 from filterable import Filterable
 from session_time_slice import SessionTimeSlice
 from cli import CLI
+from attr_utils import Memoization
 
 
 def error_exit():
@@ -92,7 +93,7 @@ def get_queries_file_name(cli_options):
 def estimate_single_serp_query_scan_actions(query, npass=1):
   scan_count_before = len(query.seen_documents)
   scan_time_used = query.total_snippet_scanning_time_in_seconds()
-  number_of_documents_likely_seen = int(scan_time_used / query.session.average_snippet_scanning_time_in_seconds())
+  number_of_documents_likely_seen = min(serp_len(), int(scan_time_used / query.session.average_snippet_scanning_time_in_seconds()))
   results_likely_seen = query.results_up_to_rank(number_of_documents_likely_seen) if number_of_documents_likely_seen > 0 else []
   docs_likely_seen = [result.document for result in results_likely_seen]
   for doc_owner in [query, query.session]:
@@ -111,7 +112,7 @@ def estimate_last_serp_query_scan_actions(query, npass=1):
   last_serp_actions = query.last_serp_actions(plain_actions=False)
   # FIXME: assumes 0 duration for last actions in query
   time_used = sum(map(lambda d: 0 if d is None else d, [query.action_duration_in_seconds_for(idx, a) for idx, a in last_serp_actions]))
-  number_of_documents_likely_seen = int(time_used / query.session.average_snippet_scanning_time_in_seconds())
+  number_of_documents_likely_seen = min(serp_len(), int(time_used / query.session.average_snippet_scanning_time_in_seconds()))
   last_serp_first_rank = (query.last_serp_number() - 1) * serp_len() + 1
   results_likely_seen = query.results_between(last_serp_first_rank, last_serp_first_rank + number_of_documents_likely_seen - 1) if number_of_documents_likely_seen > 0 else []
   docs_likely_seen = [result.document for result in results_likely_seen]
@@ -155,6 +156,7 @@ def parse():
   log_files = parse_log_files(cli_options)
   queries_file = QueriesSummaryFile(get_queries_file_name(cli_options))
   refine_scan_action_estimates()
+  Memoization.allow_attr_memoization = True
   return {
       'cli_options': cli_options,
       'gains': gains,
